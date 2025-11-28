@@ -1,4 +1,5 @@
 {
   "ban.kick_message": "You are banned from this server.\nReason: {0}\nExpires at: {1}\nBanned by: {2} ({3})",
-  "never": "Never"
+  "never": "Never",
+  "gag.message": "You are currently gagged, you will be able to talk at [green]{0}[default]."
 }

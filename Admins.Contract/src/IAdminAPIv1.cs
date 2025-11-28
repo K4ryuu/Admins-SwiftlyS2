@@ -79,9 +79,4 @@ public interface IAdminAPIv1
     /// Event fired when an admin is loaded.
     /// </summary>
     event Action<IPlayer, IAdmin>? OnAdminLoad;
-
-    /// <summary>
-    /// Event fired when a ban is added.
-    /// </summary>
-    event Action<IBan>? OnBanAdded;
 }

@@ -3,9 +3,12 @@ using Admins.Bans;
 using Admins.Contract;
 using Admins.Database;
 using Admins.Database.Models;
+using Admins.Sanctions;
 using Microsoft.Extensions.Logging;
 using SwiftlyS2.Shared;
+using SwiftlyS2.Shared.Commands;
 using SwiftlyS2.Shared.Events;
+using SwiftlyS2.Shared.Misc;
 using SwiftlyS2.Shared.Players;
 using SwiftlyS2.Shared.Plugins;
 using SwiftlyS2.Shared.SchemaDefinitions;
@@ -31,7 +34,7 @@ public partial class Admins : BasePlugin
 
     public override void ConfigureSharedInterface(IInterfaceManager interfaceManager)
     {
-        interfaceManager.AddSharedInterface<IAdminAPIv1, AdminAPIv1>("admins.api.v1", AdminAPI);
+        interfaceManager.AddSharedInterface<IAdminAPIv1, AdminAPIv1>("Admins.API.v1", AdminAPI);
     }
 
     public override void UseSharedInterface(IInterfaceManager interfaceManager)
@@ -59,6 +62,10 @@ public partial class Admins : BasePlugin
         }
 
         global::Admins.Groups.Groups.Load();
+        ServerBans.Load();
+        ServerSanctions.Load();
+
+        Core.Scheduler.RepeatBySeconds(10.0f, ServerSanctions.ScheduleCheck);
     }
 
     public override void Unload()
@@ -73,20 +80,7 @@ public partial class Admins : BasePlugin
         var player = Core.PlayerManager.GetPlayer(playerid);
         if (player == null) return;
 
-        var ban = ServerBans.FindActiveBan(player.SteamID, player.IPAddress);
-        if (ban != null)
-        {
-            string kickMessage = Core.Translation.GetPlayerLocalizer(player)[
-                "ban.kick_message",
-                ban.Reason,
-                ban.ExpiresAt == 0 ? Core.Translation.GetPlayerLocalizer(player)["never"] : DateTimeOffset.FromUnixTimeMilliseconds((long)ban.ExpiresAt).ToString("yyyy-MM-dd HH:mm:ss"),
-                ban.AdminName,
-                ban.AdminSteamId64.ToString()
-            ];
-            player.SendMessage(MessageType.Console, kickMessage);
-            player.Kick(kickMessage, SwiftlyS2.Shared.ProtobufDefinitions.ENetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_BANNED);
-            return;
-        }
+        if (!ServerBans.CheckPlayer(player)) return;
 
         Task.Run(() =>
         {
@@ -95,5 +89,30 @@ public partial class Admins : BasePlugin
 
             global::Admins.ServerAdmins.ServerAdmins.AssignAdmin(player, (Admin)admin);
         });
+    }
+
+    [ClientChatHookHandler]
+    public HookResult OnClientChat(int playerId, string text, bool teamOnly)
+    {
+        var player = Core.PlayerManager.GetPlayer(playerId);
+        if (player == null || player.IsFakeClient) return HookResult.Continue;
+
+        if (teamOnly && text.StartsWith('@'))
+        {
+            // todo: Send message to admins
+            return HookResult.Stop;
+        }
+
+        if (ServerSanctions.IsPlayerGagged(player, out var sanction))
+        {
+            var playerLocalizer = Core.Translation.GetPlayerLocalizer(player);
+            player.SendChat(playerLocalizer[
+                "gag.message",
+                sanction!.ExpiresAt == 0 ? playerLocalizer["never"] : DateTimeOffset.FromUnixTimeMilliseconds((long)sanction.ExpiresAt).ToString("yyyy-MM-dd HH:mm:ss")
+            ]);
+            return HookResult.Stop;
+        }
+
+        return HookResult.Continue;
     }
 }

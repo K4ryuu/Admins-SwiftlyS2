@@ -11,7 +11,6 @@ public class AdminAPIv1 : IAdminAPIv1
     private static ISwiftlyCore Core = null!;
 
     public event Action<IPlayer, IAdmin>? OnAdminLoad;
-    public event Action<IBan>? OnBanAdded;
 
     public IAdmin? AddAdmin(ulong steamId64, string adminName, List<IGroup> groups, List<string> permissions)
     {
@@ -95,10 +94,5 @@ public class AdminAPIv1 : IAdminAPIv1
     public void TriggerLoadAdmin(IPlayer player, IAdmin admin)
     {
         OnAdminLoad?.Invoke(player, admin);
-    }
-
-    public void TriggerBanAdded(IBan ban)
-    {
-        OnBanAdded?.Invoke(ban);
     }
 }

@@ -4,8 +4,8 @@ using Admins.Contract;
 
 namespace Admins.Database.Models;
 
-[Table("Bans")]
-public class Ban : IBan
+[Table("Sanctions")]
+public class Sanction : ISanction
 {
     [Key]
     public ulong Id { get; set; }
@@ -19,8 +19,8 @@ public class Ban : IBan
     [Column("PlayerIp")]
     public string PlayerIp { get; set; } = string.Empty;
 
-    [Column("BanType")]
-    public BanType BanType { get; set; }
+    [Column("SanctionType")]
+    public SanctionKind SanctionType { get; set; }
 
     [Column("ExpiresAt")]
     public ulong ExpiresAt { get; set; }
@@ -40,6 +40,6 @@ public class Ban : IBan
     [Column("Server")]
     public string Server { get; set; } = string.Empty;
 
-    [Column("GlobalBan")]
-    public bool GlobalBan { get; set; }
+    [Column("Global")]
+    public bool Global { get; set; }
 }

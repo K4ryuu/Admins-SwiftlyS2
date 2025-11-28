@@ -1,23 +1,23 @@
 namespace Admins.Contract;
 
-public enum BanType
+public enum SanctionKind
 {
-    SteamID = 1,
-    IP = 2
+    Mute = 1,
+    Gag = 2,
 }
 
-public interface IBan
+public interface ISanction
 {
     ulong Id { get; set; }
     ulong SteamId64 { get; set; }
     string PlayerName { get; set; }
     string PlayerIp { get; set; }
-    BanType BanType { get; set; }
+    SanctionKind SanctionType { get; set; }
     ulong ExpiresAt { get; set; }
     ulong Length { get; set; }
     string Reason { get; set; }
     ulong AdminSteamId64 { get; set; }
     string AdminName { get; set; }
     string Server { get; set; }
-    bool GlobalBan { get; set; }
+    bool Global { get; set; }
 }
