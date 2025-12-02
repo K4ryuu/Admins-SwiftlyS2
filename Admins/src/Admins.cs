@@ -1,10 +1,15 @@
 using Admins.API;
 using Admins.Bans;
+using Admins.Configuration;
 using Admins.Contract;
 using Admins.Database;
 using Admins.Database.Models;
 using Admins.Sanctions;
+using Dommel;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using SwiftlyS2.Shared;
 using SwiftlyS2.Shared.Commands;
 using SwiftlyS2.Shared.Events;
@@ -21,8 +26,8 @@ public partial class Admins : BasePlugin
     public static Groups.Groups Groups = new();
     public static ServerAdmins.ServerAdmins ServerAdmins = new();
     public static string ServerGUID = string.Empty;
-
     public static AdminAPIv1 AdminAPI = new();
+    public static IOptions<AdminsConfig> Config = null!;
 
     public Admins(ISwiftlyCore core) : base(core)
     {
@@ -44,6 +49,12 @@ public partial class Admins : BasePlugin
 
     public override void Load(bool hotReload)
     {
+        Core.Configuration.InitializeJsonWithModel<AdminsConfig>("config.jsonc", "Main")
+            .Configure(builder =>
+            {
+                builder.AddJsonFile("config.jsonc", false, true);
+            });
+
         if (!File.Exists(Path.Combine(Core.PluginDataDirectory, "server_id.txt")))
         {
             ServerGUID = Guid.NewGuid().ToString();
@@ -61,6 +72,12 @@ public partial class Admins : BasePlugin
             }
         }
 
+        ServiceCollection services = new();
+        services.AddSwiftly(Core).AddOptions<AdminsConfig>().BindConfiguration("Main");
+
+        var provider = services.BuildServiceProvider();
+        Config = provider.GetRequiredService<IOptions<AdminsConfig>>();
+
         global::Admins.Groups.Groups.Load();
         ServerBans.Load();
         ServerSanctions.Load();
@@ -70,6 +87,32 @@ public partial class Admins : BasePlugin
 
     public override void Unload()
     {
+    }
+
+    [EventListener<EventDelegates.OnStartupServer>]
+    public void OnStartupServer()
+    {
+        Task.Run(() =>
+        {
+            var serverIp = Core.Engine.ServerIP;
+            var hostport = Core.ConVar.Find<int>("hostport");
+
+            if (hostport == null || serverIp == null) return;
+            if (!Config.Value.UseDatabase) return;
+
+            var database = Core.Database.GetConnection("admins");
+            var existingServer = database.Count<Server>(s => s.GUID == ServerGUID);
+            if (existingServer == 0)
+            {
+                var server = new Server
+                {
+                    IP = serverIp,
+                    Port = hostport.Value,
+                    GUID = ServerGUID
+                };
+                database.Insert(server);
+            }
+        });
     }
 
     [EventListener<EventDelegates.OnClientSteamAuthorize>]
@@ -97,12 +140,16 @@ public partial class Admins : BasePlugin
         var player = Core.PlayerManager.GetPlayer(playerId);
         if (player == null || player.IsFakeClient) return HookResult.Continue;
 
-        if (teamOnly && text.StartsWith('@'))
+        if (teamOnly && text.StartsWith('@') && Config.Value.EnableAdminChat)
         {
+            bool isAdmin = Core.Permission.PlayerHasPermission(player.SteamID, "admins.chat");
             var players = Core.PlayerManager.GetAllPlayers().Where(p => Core.Permission.PlayerHasPermission(p.SteamID, "admins.chat"));
+            if (!players.Contains(player)) players = players.Append(player);
+
             foreach (var p in players)
             {
-
+                var playerLocalizer = Core.Translation.GetPlayerLocalizer(p);
+                p.SendChat(playerLocalizer[isAdmin ? "chat.admin_chat_format" : "chat.player_chat_format", player.Controller.PlayerName, text[1..]]);
             }
             return HookResult.Stop;
         }
@@ -112,7 +159,10 @@ public partial class Admins : BasePlugin
             var playerLocalizer = Core.Translation.GetPlayerLocalizer(player);
             player.SendChat(playerLocalizer[
                 "gag.message",
-                sanction!.ExpiresAt == 0 ? playerLocalizer["never"] : DateTimeOffset.FromUnixTimeMilliseconds((long)sanction.ExpiresAt).ToString("yyyy-MM-dd HH:mm:ss")
+                Config.Value.Prefix,
+                sanction!.AdminName,
+                sanction!.ExpiresAt == 0 ? playerLocalizer["never"] : DateTimeOffset.FromUnixTimeMilliseconds((long)sanction.ExpiresAt).ToString("yyyy-MM-dd HH:mm:ss"),
+                sanction.Reason
             ]);
             return HookResult.Stop;
         }

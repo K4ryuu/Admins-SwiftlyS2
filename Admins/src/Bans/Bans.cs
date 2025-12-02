@@ -15,20 +15,30 @@ public partial class ServerBans
 
     public static void Load()
     {
+        if (!Admins.Config.Value.UseDatabase) return;
+
         Task.Run(() =>
         {
             var database = Core.Database.GetConnection("admins");
-            Bans = [.. database.GetAll<Ban>()];
+            SetBans([.. database.GetAll<Ban>()]);
         });
+    }
+
+    public static void SetBans(List<IBan> bans)
+    {
+        Bans = bans;
     }
 
     public static void AddBan(IBan ban)
     {
         Task.Run(() =>
         {
-            var database = Core.Database.GetConnection("admins");
-            var id = database.Insert((Ban)ban);
-            ban.Id = (ulong)id;
+            if (Admins.Config.Value.UseDatabase)
+            {
+                var database = Core.Database.GetConnection("admins");
+                var id = database.Insert((Ban)ban);
+                ban.Id = (ulong)id;
+            }
             Bans.Add(ban);
         });
     }
@@ -37,8 +47,11 @@ public partial class ServerBans
     {
         Task.Run(() =>
         {
-            var database = Core.Database.GetConnection("admins");
-            database.Delete((Ban)ban);
+            if (Admins.Config.Value.UseDatabase)
+            {
+                var database = Core.Database.GetConnection("admins");
+                database.Delete((Ban)ban);
+            }
             Bans.Remove(ban);
         });
     }
@@ -47,8 +60,12 @@ public partial class ServerBans
     {
         Task.Run(() =>
         {
-            var database = Core.Database.GetConnection("admins");
-            database.Update((Ban)ban);
+            if (Admins.Config.Value.UseDatabase)
+            {
+                var database = Core.Database.GetConnection("admins");
+                database.Update((Ban)ban);
+            }
+
             Bans.RemoveAt(Bans.FindIndex(b => b.Id == ban.Id));
             Bans.Add(ban);
         });
@@ -78,7 +95,11 @@ public partial class ServerBans
                 ban.AdminSteamId64.ToString()
             ];
             player.SendMessage(MessageType.Console, kickMessage);
-            player.Kick(kickMessage, SwiftlyS2.Shared.ProtobufDefinitions.ENetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_BANNED);
+
+            Core.Scheduler.NextTick(() =>
+            {
+                player.Kick(kickMessage, SwiftlyS2.Shared.ProtobufDefinitions.ENetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_BANNED);
+            });
             return false;
         }
 
