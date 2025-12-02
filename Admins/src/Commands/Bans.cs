@@ -23,7 +23,7 @@ public partial class AdminCommands
         if (players == null || !players.Any())
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.player_not_found", Admins.Config.Value.Prefix, context.Args[0]]);
+            context.Reply(localizer["command.player_not_found", Admins.Config.CurrentValue.Prefix, context.Args[0]]);
             return;
         }
 
@@ -31,7 +31,7 @@ public partial class AdminCommands
         if (!TimeSpanParser.TryParse(time, out var duration))
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.invalid_time_format", Admins.Config.Value.Prefix, time]);
+            context.Reply(localizer["command.invalid_time_format", Admins.Config.CurrentValue.Prefix, time]);
             return;
         }
 

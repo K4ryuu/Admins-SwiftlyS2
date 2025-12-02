@@ -26,21 +26,21 @@ public partial class AdminCommands
         if (players == null || !players.Any())
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.player_not_found", Admins.Config.Value.Prefix, context.Args[0]]);
+            context.Reply(localizer["command.player_not_found", Admins.Config.CurrentValue.Prefix, context.Args[0]]);
             return;
         }
 
         if (!int.TryParse(context.Args[1], out var health))
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.invalid_value_range", Admins.Config.Value.Prefix, context.Args[1], "health", "0", "100"]);
+            context.Reply(localizer["command.invalid_value_range", Admins.Config.CurrentValue.Prefix, context.Args[1], "health", "0", "100"]);
             return;
         }
 
         if (health < 0 || health > 100)
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.invalid_value_range", Admins.Config.Value.Prefix, context.Args[1], "health", "0", "100"]);
+            context.Reply(localizer["command.invalid_value_range", Admins.Config.CurrentValue.Prefix, context.Args[1], "health", "0", "100"]);
             return;
         }
 
@@ -50,14 +50,14 @@ public partial class AdminCommands
             if (!int.TryParse(context.Args[2], out armour))
             {
                 var localizer = GetPlayerLocalizer(context);
-                context.Reply(localizer["command.invalid_value_range", Admins.Config.Value.Prefix, context.Args[2], "armour", "0", "100"]);
+                context.Reply(localizer["command.invalid_value_range", Admins.Config.CurrentValue.Prefix, context.Args[2], "armour", "0", "100"]);
                 return;
             }
 
             if (armour < 0 || armour > 100)
             {
                 var localizer = GetPlayerLocalizer(context);
-                context.Reply(localizer["command.invalid_value_range", Admins.Config.Value.Prefix, context.Args[2], "armour", "0", "100"]);
+                context.Reply(localizer["command.invalid_value_range", Admins.Config.CurrentValue.Prefix, context.Args[2], "armour", "0", "100"]);
                 return;
             }
         }
@@ -68,7 +68,7 @@ public partial class AdminCommands
             if (!bool.TryParse(context.Args[3], out helmet))
             {
                 var localizer = GetPlayerLocalizer(context);
-                context.Reply(localizer["command.invalid_value_range", Admins.Config.Value.Prefix, context.Args[3], "helmet", "false", "true"]);
+                context.Reply(localizer["command.invalid_value_range", Admins.Config.CurrentValue.Prefix, context.Args[3], "helmet", "false", "true"]);
                 return;
             }
         }
@@ -124,7 +124,7 @@ public partial class AdminCommands
             var playerName = "Unknown";
             if (controller.IsValid) playerName = p.Controller.PlayerName;
 
-            return (localizer["command.hp_success", Admins.Config.Value.Prefix, adminName, playerName, health, armour, helmet], MessageType.Chat);
+            return (localizer["command.hp_success", Admins.Config.CurrentValue.Prefix, adminName, playerName, health, armour, helmet], MessageType.Chat);
         });
     }
 
@@ -147,7 +147,7 @@ public partial class AdminCommands
         if (players == null || !players.Any())
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.player_not_found", Admins.Config.Value.Prefix, context.Args[0]]);
+            context.Reply(localizer["command.player_not_found", Admins.Config.CurrentValue.Prefix, context.Args[0]]);
             return;
         }
 
@@ -174,7 +174,7 @@ public partial class AdminCommands
             var playerName = "Unknown";
             if (controller.IsValid) playerName = p.Controller.PlayerName;
 
-            return (localizer["command.giveitem_success", Admins.Config.Value.Prefix, adminName, itemName, playerName], MessageType.Chat);
+            return (localizer["command.giveitem_success", Admins.Config.CurrentValue.Prefix, adminName, itemName, playerName], MessageType.Chat);
         });
     }
 
@@ -197,21 +197,21 @@ public partial class AdminCommands
         if (players == null || !players.Any())
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.player_not_found", Admins.Config.Value.Prefix, context.Args[0]]);
+            context.Reply(localizer["command.player_not_found", Admins.Config.CurrentValue.Prefix, context.Args[0]]);
             return;
         }
 
         if (!int.TryParse(context.Args[1], out var amount))
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.invalid_value_range", Admins.Config.Value.Prefix, context.Args[1], "amount", "1", "16000"]);
+            context.Reply(localizer["command.invalid_value_range", Admins.Config.CurrentValue.Prefix, context.Args[1], "amount", "1", "16000"]);
             return;
         }
 
         if (amount < 1 || amount > 16000)
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.invalid_value_range", Admins.Config.Value.Prefix, context.Args[1], "amount", "1", "16000"]);
+            context.Reply(localizer["command.invalid_value_range", Admins.Config.CurrentValue.Prefix, context.Args[1], "amount", "1", "16000"]);
             return;
         }
 
@@ -234,7 +234,7 @@ public partial class AdminCommands
             var playerName = "Unknown";
             if (controller.IsValid) playerName = p.Controller.PlayerName;
 
-            return (localizer["command.givemoney_success", Admins.Config.Value.Prefix, adminName, amount, playerName], MessageType.Chat);
+            return (localizer["command.givemoney_success", Admins.Config.CurrentValue.Prefix, adminName, amount, playerName], MessageType.Chat);
         });
     }
 
@@ -257,21 +257,21 @@ public partial class AdminCommands
         if (players == null || !players.Any())
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.player_not_found", Admins.Config.Value.Prefix, context.Args[0]]);
+            context.Reply(localizer["command.player_not_found", Admins.Config.CurrentValue.Prefix, context.Args[0]]);
             return;
         }
 
         if (!int.TryParse(context.Args[1], out var amount))
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.invalid_value_range", Admins.Config.Value.Prefix, context.Args[1], "amount", "0", "16000"]);
+            context.Reply(localizer["command.invalid_value_range", Admins.Config.CurrentValue.Prefix, context.Args[1], "amount", "0", "16000"]);
             return;
         }
 
         if (amount < 0 || amount > 16000)
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.invalid_value_range", Admins.Config.Value.Prefix, context.Args[1], "amount", "0", "16000"]);
+            context.Reply(localizer["command.invalid_value_range", Admins.Config.CurrentValue.Prefix, context.Args[1], "amount", "0", "16000"]);
             return;
         }
 
@@ -294,7 +294,7 @@ public partial class AdminCommands
             var playerName = "Unknown";
             if (controller.IsValid) playerName = p.Controller.PlayerName;
 
-            return (localizer["command.setmoney_success", Admins.Config.Value.Prefix, adminName, amount, playerName], MessageType.Chat);
+            return (localizer["command.setmoney_success", Admins.Config.CurrentValue.Prefix, adminName, amount, playerName], MessageType.Chat);
         });
     }
 
@@ -317,7 +317,7 @@ public partial class AdminCommands
         if (players == null || !players.Any())
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.player_not_found", Admins.Config.Value.Prefix, context.Args[0]]);
+            context.Reply(localizer["command.player_not_found", Admins.Config.CurrentValue.Prefix, context.Args[0]]);
             return;
         }
 
@@ -342,7 +342,7 @@ public partial class AdminCommands
             var controller = p.Controller;
             var playerName = "Unknown";
             if (controller.IsValid) playerName = p.Controller.PlayerName;
-            return (localizer["command.melee_success", Admins.Config.Value.Prefix, adminName, playerName], MessageType.Chat);
+            return (localizer["command.melee_success", Admins.Config.CurrentValue.Prefix, adminName, playerName], MessageType.Chat);
         });
     }
 
@@ -365,7 +365,7 @@ public partial class AdminCommands
         if (players == null || !players.Any())
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.player_not_found", Admins.Config.Value.Prefix, context.Args[0]]);
+            context.Reply(localizer["command.player_not_found", Admins.Config.CurrentValue.Prefix, context.Args[0]]);
             return;
         }
 
@@ -389,7 +389,7 @@ public partial class AdminCommands
             var controller = p.Controller;
             var playerName = "Unknown";
             if (controller.IsValid) playerName = p.Controller.PlayerName;
-            return (localizer["command.disarm_success", Admins.Config.Value.Prefix, adminName, playerName], MessageType.Chat);
+            return (localizer["command.disarm_success", Admins.Config.CurrentValue.Prefix, adminName, playerName], MessageType.Chat);
         });
     }
 
@@ -412,14 +412,14 @@ public partial class AdminCommands
         if (!float.TryParse(context.Args[0], out var delay))
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.invalid_value_range", Admins.Config.Value.Prefix, context.Args[0], "delay", "0", "300"]);
+            context.Reply(localizer["command.invalid_value_range", Admins.Config.CurrentValue.Prefix, context.Args[0], "delay", "0", "300"]);
             return;
         }
 
         if (delay < 0 || delay > 300)
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.invalid_value_range", Admins.Config.Value.Prefix, context.Args[0], "delay", "0", "300"]);
+            context.Reply(localizer["command.invalid_value_range", Admins.Config.CurrentValue.Prefix, context.Args[0], "delay", "0", "300"]);
             return;
         }
 
@@ -433,7 +433,7 @@ public partial class AdminCommands
 
         SendMessageToPlayers(Core.PlayerManager.GetAllPlayers(), context.Sender!, (p, localizer) =>
         {
-            return (localizer["command.restartround", Admins.Config.Value.Prefix, adminName, delay], MessageType.Chat);
+            return (localizer["command.restartround", Admins.Config.CurrentValue.Prefix, adminName, delay], MessageType.Chat);
         });
     }
 
@@ -456,7 +456,7 @@ public partial class AdminCommands
         if (players == null || !players.Any())
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.player_not_found", Admins.Config.Value.Prefix, context.Args[0]]);
+            context.Reply(localizer["command.player_not_found", Admins.Config.CurrentValue.Prefix, context.Args[0]]);
             return;
         }
 
@@ -478,7 +478,7 @@ public partial class AdminCommands
             var controller = p.Controller;
             var playerName = "Unknown";
             if (controller.IsValid) playerName = p.Controller.PlayerName;
-            return (localizer["command.freeze_success", Admins.Config.Value.Prefix, adminName, playerName], MessageType.Chat);
+            return (localizer["command.freeze_success", Admins.Config.CurrentValue.Prefix, adminName, playerName], MessageType.Chat);
         });
     }
 
@@ -501,7 +501,7 @@ public partial class AdminCommands
         if (players == null || !players.Any())
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.player_not_found", Admins.Config.Value.Prefix, context.Args[0]]);
+            context.Reply(localizer["command.player_not_found", Admins.Config.CurrentValue.Prefix, context.Args[0]]);
             return;
         }
 
@@ -523,7 +523,7 @@ public partial class AdminCommands
             var controller = p.Controller;
             var playerName = "Unknown";
             if (controller.IsValid) playerName = p.Controller.PlayerName;
-            return (localizer["command.unfreeze_success", Admins.Config.Value.Prefix, adminName, playerName], MessageType.Chat);
+            return (localizer["command.unfreeze_success", Admins.Config.CurrentValue.Prefix, adminName, playerName], MessageType.Chat);
         });
     }
 
@@ -540,14 +540,14 @@ public partial class AdminCommands
         if (pawn == null)
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.noclip_no_pawn", Admins.Config.Value.Prefix]);
+            context.Reply(localizer["command.noclip_no_pawn", Admins.Config.CurrentValue.Prefix]);
             return;
         }
 
         if (pawn.IsValid == false || pawn.LifeState != (byte)LifeState_t.LIFE_ALIVE)
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.noclip_no_pawn", Admins.Config.Value.Prefix]);
+            context.Reply(localizer["command.noclip_no_pawn", Admins.Config.CurrentValue.Prefix]);
             return;
         }
 
@@ -558,7 +558,7 @@ public partial class AdminCommands
             pawn.MoveTypeUpdated();
 
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.noclip_disabled", Admins.Config.Value.Prefix]);
+            context.Reply(localizer["command.noclip_disabled", Admins.Config.CurrentValue.Prefix]);
         }
         else
         {
@@ -567,7 +567,7 @@ public partial class AdminCommands
             pawn.MoveTypeUpdated();
 
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.noclip_enabled", Admins.Config.Value.Prefix]);
+            context.Reply(localizer["command.noclip_enabled", Admins.Config.CurrentValue.Prefix]);
         }
     }
 
@@ -589,14 +589,14 @@ public partial class AdminCommands
         if (!float.TryParse(context.Args[0], out var speedMultiplier))
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.invalid_value_range", Admins.Config.Value.Prefix, context.Args[0], "speed_multiplier", "0.1", "10.0"]);
+            context.Reply(localizer["command.invalid_value_range", Admins.Config.CurrentValue.Prefix, context.Args[0], "speed_multiplier", "0.1", "10.0"]);
             return;
         }
 
         if (speedMultiplier < 0.1f || speedMultiplier > 10.0f)
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.invalid_value_range", Admins.Config.Value.Prefix, context.Args[0], "speed_multiplier", "0.1", "10.0"]);
+            context.Reply(localizer["command.invalid_value_range", Admins.Config.CurrentValue.Prefix, context.Args[0], "speed_multiplier", "0.1", "10.0"]);
             return;
         }
 
@@ -604,14 +604,14 @@ public partial class AdminCommands
         if (pawn == null)
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.setspeed_no_pawn", Admins.Config.Value.Prefix]);
+            context.Reply(localizer["command.setspeed_no_pawn", Admins.Config.CurrentValue.Prefix]);
             return;
         }
 
         if (pawn.IsValid == false || pawn.LifeState != (byte)LifeState_t.LIFE_ALIVE)
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.setspeed_no_pawn", Admins.Config.Value.Prefix]);
+            context.Reply(localizer["command.setspeed_no_pawn", Admins.Config.CurrentValue.Prefix]);
             return;
         }
 
@@ -619,7 +619,7 @@ public partial class AdminCommands
         pawn.VelocityModifierUpdated();
 
         var localizerSuccess = GetPlayerLocalizer(context);
-        context.Reply(localizerSuccess["command.setspeed_success", Admins.Config.Value.Prefix, speedMultiplier]);
+        context.Reply(localizerSuccess["command.setspeed_success", Admins.Config.CurrentValue.Prefix, speedMultiplier]);
     }
 
     [Command("setgravity", permission: "admins.commands.setgravity")]
@@ -640,14 +640,14 @@ public partial class AdminCommands
         if (!float.TryParse(context.Args[0], out var gravityMultiplier))
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.invalid_value_range", Admins.Config.Value.Prefix, context.Args[0], "gravity_multiplier", "0.1", "10.0"]);
+            context.Reply(localizer["command.invalid_value_range", Admins.Config.CurrentValue.Prefix, context.Args[0], "gravity_multiplier", "0.1", "10.0"]);
             return;
         }
 
         if (gravityMultiplier < 0.1f || gravityMultiplier > 10.0f)
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.invalid_value_range", Admins.Config.Value.Prefix, context.Args[0], "gravity_multiplier", "0.1", "10.0"]);
+            context.Reply(localizer["command.invalid_value_range", Admins.Config.CurrentValue.Prefix, context.Args[0], "gravity_multiplier", "0.1", "10.0"]);
             return;
         }
 
@@ -655,14 +655,14 @@ public partial class AdminCommands
         if (pawn == null)
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.setgravity_no_pawn", Admins.Config.Value.Prefix]);
+            context.Reply(localizer["command.setgravity_no_pawn", Admins.Config.CurrentValue.Prefix]);
             return;
         }
 
         if (pawn.IsValid == false || pawn.LifeState != (byte)LifeState_t.LIFE_ALIVE)
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.setgravity_no_pawn", Admins.Config.Value.Prefix]);
+            context.Reply(localizer["command.setgravity_no_pawn", Admins.Config.CurrentValue.Prefix]);
             return;
         }
 
@@ -670,7 +670,7 @@ public partial class AdminCommands
         pawn.GravityScaleUpdated();
 
         var localizerSuccess = GetPlayerLocalizer(context);
-        context.Reply(localizerSuccess["command.setgravity_success", Admins.Config.Value.Prefix, gravityMultiplier]);
+        context.Reply(localizerSuccess["command.setgravity_success", Admins.Config.CurrentValue.Prefix, gravityMultiplier]);
     }
 
     [Command("slay", permission: "admins.commands.slay")]
@@ -692,7 +692,7 @@ public partial class AdminCommands
         if (players == null || !players.Any())
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.player_not_found", Admins.Config.Value.Prefix, context.Args[0]]);
+            context.Reply(localizer["command.player_not_found", Admins.Config.CurrentValue.Prefix, context.Args[0]]);
             return;
         }
 
@@ -712,7 +712,7 @@ public partial class AdminCommands
             var controller = p.Controller;
             var playerName = "Unknown";
             if (controller.IsValid) playerName = p.Controller.PlayerName;
-            return (localizer["command.slay_success", Admins.Config.Value.Prefix, adminName, playerName], MessageType.Chat);
+            return (localizer["command.slay_success", Admins.Config.CurrentValue.Prefix, adminName, playerName], MessageType.Chat);
         });
     }
 
@@ -735,7 +735,7 @@ public partial class AdminCommands
         if (players == null || !players.Any())
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.player_not_found", Admins.Config.Value.Prefix, context.Args[0]]);
+            context.Reply(localizer["command.player_not_found", Admins.Config.CurrentValue.Prefix, context.Args[0]]);
             return;
         }
 
@@ -745,7 +745,7 @@ public partial class AdminCommands
             if (!int.TryParse(context.Args[1], out damage))
             {
                 var localizer = GetPlayerLocalizer(context);
-                context.Reply(localizer["command.invalid_value_range", Admins.Config.Value.Prefix, context.Args[1], "damage", "0", "100"]);
+                context.Reply(localizer["command.invalid_value_range", Admins.Config.CurrentValue.Prefix, context.Args[1], "damage", "0", "100"]);
                 return;
             }
         }
@@ -753,7 +753,7 @@ public partial class AdminCommands
         if (damage < 0 || damage > 100)
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.invalid_value_range", Admins.Config.Value.Prefix, context.Args[1], "damage", "0", "100"]);
+            context.Reply(localizer["command.invalid_value_range", Admins.Config.CurrentValue.Prefix, context.Args[1], "damage", "0", "100"]);
             return;
         }
 
@@ -784,7 +784,7 @@ public partial class AdminCommands
             var controller = p.Controller;
             var playerName = "Unknown";
             if (controller.IsValid) playerName = p.Controller.PlayerName;
-            return (localizer["command.slap_success", Admins.Config.Value.Prefix, adminName, playerName], MessageType.Chat);
+            return (localizer["command.slap_success", Admins.Config.CurrentValue.Prefix, adminName, playerName], MessageType.Chat);
         });
     }
 
@@ -807,7 +807,7 @@ public partial class AdminCommands
         if (players == null || !players.Any())
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.player_not_found", Admins.Config.Value.Prefix, context.Args[0]]);
+            context.Reply(localizer["command.player_not_found", Admins.Config.CurrentValue.Prefix, context.Args[0]]);
             return;
         }
 
@@ -835,7 +835,7 @@ public partial class AdminCommands
             var playerName = "Unknown";
             if (controller.IsValid) playerName = oldNames[p];
 
-            return (localizer["command.rename_success", Admins.Config.Value.Prefix, adminName, playerName, newName], MessageType.Chat);
+            return (localizer["command.rename_success", Admins.Config.CurrentValue.Prefix, adminName, playerName, newName], MessageType.Chat);
         });
     }
 

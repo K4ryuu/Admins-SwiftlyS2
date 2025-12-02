@@ -9,6 +9,8 @@ public class AdminsConfig
     public bool UseDatabase { get; set; } = true;
     public Color AdminMenuColor { get; set; } = Color.FromHex("#00FEED");
 
+    public float SyncIntervalInSeconds { get; set; } = 30.0f;
+
     public List<string> MuteReasons { get; set; } = [
         "Obscene language",
         "Insult players",

@@ -18,7 +18,7 @@ public partial class AdminCommands
     public void SendSyntax(ICommandContext context, string cmdname, string[] arguments)
     {
         var localizer = GetPlayerLocalizer(context);
-        context.Reply(localizer["command.syntax", Admins.Config.Value.Prefix, context.Prefix, cmdname, string.Join(" ", arguments)]);
+        context.Reply(localizer["command.syntax", Admins.Config.CurrentValue.Prefix, context.Prefix, cmdname, string.Join(" ", arguments)]);
     }
 
     public ILocalizer GetPlayerLocalizer(ICommandContext context)
@@ -30,7 +30,7 @@ public partial class AdminCommands
     public void SendByPlayerOnly(ICommandContext context)
     {
         var localizer = GetPlayerLocalizer(context);
-        context.Reply(localizer["command.player_only", Admins.Config.Value.Prefix]);
+        context.Reply(localizer["command.player_only", Admins.Config.CurrentValue.Prefix]);
     }
 
     public void SendMessageToPlayers(IEnumerable<IPlayer> players, IPlayer? sender, Func<IPlayer, ILocalizer, (string, MessageType)> messageBuilder)

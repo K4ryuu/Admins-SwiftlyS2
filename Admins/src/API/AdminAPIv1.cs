@@ -10,6 +10,10 @@ public class AdminAPIv1 : IAdminAPIv1
     [SwiftlyInject]
     private static ISwiftlyCore Core = null!;
 
+    public IAdminBansAPIv1 AdminBansAPI => Admins.AdminBansAPI;
+
+    public IAdminSanctionsAPIv1 AdminSanctionsAPI => Admins.AdminSanctionsAPI;
+
     public event Action<IPlayer, IAdmin>? OnAdminLoad;
 
     public IAdmin? AddAdmin(ulong steamId64, string adminName, List<IGroup> groups, List<string> permissions)

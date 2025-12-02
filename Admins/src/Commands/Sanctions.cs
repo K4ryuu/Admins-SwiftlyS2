@@ -22,7 +22,7 @@ public partial class AdminCommands
         if (players == null || !players.Any())
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.player_not_found", Admins.Config.Value.Prefix, context.Args[0]]);
+            context.Reply(localizer["command.player_not_found", Admins.Config.CurrentValue.Prefix, context.Args[0]]);
             return;
         }
 
@@ -30,7 +30,7 @@ public partial class AdminCommands
         if (!TimeSpanParser.TryParse(time, out var duration))
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.invalid_time_format", Admins.Config.Value.Prefix, time]);
+            context.Reply(localizer["command.invalid_time_format", Admins.Config.CurrentValue.Prefix, time]);
             return;
         }
 
@@ -62,7 +62,7 @@ public partial class AdminCommands
         {
             string gagMessage = localizer[
                 "gag.message",
-                Admins.Config.Value.Prefix,
+                Admins.Config.CurrentValue.Prefix,
                 adminName,
                 expiresAt == 0 ? localizer["never"] : DateTimeOffset.FromUnixTimeMilliseconds(expiresAt).ToString("yyyy-MM-dd HH:mm:ss"),
                 reason
@@ -84,7 +84,7 @@ public partial class AdminCommands
         if (players == null || !players.Any())
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.player_not_found", Admins.Config.Value.Prefix, context.Args[0]]);
+            context.Reply(localizer["command.player_not_found", Admins.Config.CurrentValue.Prefix, context.Args[0]]);
             return;
         }
 
@@ -92,7 +92,7 @@ public partial class AdminCommands
         if (!TimeSpanParser.TryParse(time, out var duration))
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.invalid_time_format", Admins.Config.Value.Prefix, time]);
+            context.Reply(localizer["command.invalid_time_format", Admins.Config.CurrentValue.Prefix, time]);
             return;
         }
 
@@ -124,7 +124,7 @@ public partial class AdminCommands
         {
             string gagMessage = localizer[
                 "gag.message",
-                Admins.Config.Value.Prefix,
+                Admins.Config.CurrentValue.Prefix,
                 adminName,
                 expiresAt == 0 ? localizer["never"] : DateTimeOffset.FromUnixTimeMilliseconds(expiresAt).ToString("yyyy-MM-dd HH:mm:ss"),
                 reason
@@ -146,7 +146,7 @@ public partial class AdminCommands
         if (players == null || !players.Any())
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.player_not_found", Admins.Config.Value.Prefix, context.Args[0]]);
+            context.Reply(localizer["command.player_not_found", Admins.Config.CurrentValue.Prefix, context.Args[0]]);
             return;
         }
 
@@ -154,7 +154,7 @@ public partial class AdminCommands
         if (!TimeSpanParser.TryParse(time, out var duration))
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.invalid_time_format", Admins.Config.Value.Prefix, time]);
+            context.Reply(localizer["command.invalid_time_format", Admins.Config.CurrentValue.Prefix, time]);
             return;
         }
 
@@ -188,7 +188,7 @@ public partial class AdminCommands
         {
             string muteMessage = localizer[
                 "mute.message",
-                Admins.Config.Value.Prefix,
+                Admins.Config.CurrentValue.Prefix,
                 adminName,
                 expiresAt == 0 ? localizer["never"] : DateTimeOffset.FromUnixTimeMilliseconds(expiresAt).ToString("yyyy-MM-dd HH:mm:ss"),
                 reason
@@ -210,7 +210,7 @@ public partial class AdminCommands
         if (players == null || !players.Any())
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.player_not_found", Admins.Config.Value.Prefix, context.Args[0]]);
+            context.Reply(localizer["command.player_not_found", Admins.Config.CurrentValue.Prefix, context.Args[0]]);
             return;
         }
 
@@ -218,7 +218,7 @@ public partial class AdminCommands
         if (!TimeSpanParser.TryParse(time, out var duration))
         {
             var localizer = GetPlayerLocalizer(context);
-            context.Reply(localizer["command.invalid_time_format", Admins.Config.Value.Prefix, time]);
+            context.Reply(localizer["command.invalid_time_format", Admins.Config.CurrentValue.Prefix, time]);
             return;
         }
 
@@ -252,7 +252,7 @@ public partial class AdminCommands
         {
             string muteMessage = localizer[
                 "mute.message",
-                Admins.Config.Value.Prefix,
+                Admins.Config.CurrentValue.Prefix,
                 adminName,
                 expiresAt == 0 ? localizer["never"] : DateTimeOffset.FromUnixTimeMilliseconds(expiresAt).ToString("yyyy-MM-dd HH:mm:ss"),
                 reason

@@ -15,20 +15,31 @@ public partial class ServerSanctions
     public static List<ISanction> Sanctions { get; set; } = [];
     public static Dictionary<ulong, VoiceFlagValue> OriginalVoiceFlags = new();
 
-    public static void Load()
+    public static void Load(Action? onLoaded)
     {
-        if (!Admins.Config.Value.UseDatabase) return;
+        if (!Admins.Config.CurrentValue.UseDatabase) return;
 
         Task.Run(() =>
         {
             var database = Core.Database.GetConnection("admins");
             SetSanctions([.. database.GetAll<Sanction>()]);
+            onLoaded?.Invoke();
         });
     }
 
     public static void SetSanctions(List<ISanction> sanctions)
     {
         Sanctions = sanctions;
+    }
+
+    public static List<ISanction> GetSanctions()
+    {
+        return Sanctions;
+    }
+
+    public static void DatabaseFetch()
+    {
+        Load(ScheduleCheck);
     }
 
     public static void ScheduleCheck()
@@ -48,7 +59,7 @@ public partial class ServerSanctions
                     var localizer = Core.Translation.GetPlayerLocalizer(player);
                     string muteMessage = localizer[
                         "mute.message",
-                        Admins.Config.Value.Prefix,
+                        Admins.Config.CurrentValue.Prefix,
                         sanction!.AdminName,
                         sanction!.ExpiresAt == 0 ? localizer["never"] : DateTimeOffset.FromUnixTimeMilliseconds((long)sanction!.ExpiresAt).ToString("yyyy-MM-dd HH:mm:ss"),
                         sanction.Reason
@@ -71,13 +82,14 @@ public partial class ServerSanctions
     {
         Task.Run(() =>
         {
-            if (Admins.Config.Value.UseDatabase)
+            if (Admins.Config.CurrentValue.UseDatabase)
             {
                 var database = Core.Database.GetConnection("admins");
                 var id = database.Insert((Sanction)sanction);
                 sanction.Id = (ulong)id;
             }
             Sanctions.Add(sanction);
+            Admins.AdminSanctionsAPI.TriggerSanctionAdded(sanction);
         });
     }
 
@@ -85,12 +97,13 @@ public partial class ServerSanctions
     {
         Task.Run(() =>
         {
-            if (Admins.Config.Value.UseDatabase)
+            if (Admins.Config.CurrentValue.UseDatabase)
             {
                 var database = Core.Database.GetConnection("admins");
                 database.Delete((Sanction)sanction);
             }
             Sanctions.Remove(sanction);
+            Admins.AdminSanctionsAPI.TriggerSanctionRemoved(sanction);
         });
     }
 
@@ -98,13 +111,27 @@ public partial class ServerSanctions
     {
         Task.Run(() =>
         {
-            if (Admins.Config.Value.UseDatabase)
+            if (Admins.Config.CurrentValue.UseDatabase)
             {
                 var database = Core.Database.GetConnection("admins");
                 database.Update((Sanction)sanction);
             }
             Sanctions.RemoveAt(Sanctions.FindIndex(s => s.Id == sanction.Id));
             Sanctions.Add(sanction);
+            Admins.AdminSanctionsAPI.TriggerSanctionUpdated(sanction);
+        });
+    }
+
+    public static void ClearSanctions()
+    {
+        Task.Run(() =>
+        {
+            if (Admins.Config.CurrentValue.UseDatabase)
+            {
+                var database = Core.Database.GetConnection("admins");
+                database.DeleteAll<Sanction>();
+            }
+            Sanctions.Clear();
         });
     }
 

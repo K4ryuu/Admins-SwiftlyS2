@@ -14,9 +14,7 @@ using SwiftlyS2.Shared;
 using SwiftlyS2.Shared.Commands;
 using SwiftlyS2.Shared.Events;
 using SwiftlyS2.Shared.Misc;
-using SwiftlyS2.Shared.Players;
 using SwiftlyS2.Shared.Plugins;
-using SwiftlyS2.Shared.SchemaDefinitions;
 
 namespace Admins;
 
@@ -27,7 +25,12 @@ public partial class Admins : BasePlugin
     public static ServerAdmins.ServerAdmins ServerAdmins = new();
     public static string ServerGUID = string.Empty;
     public static AdminAPIv1 AdminAPI = new();
-    public static IOptions<AdminsConfig> Config = null!;
+    public static AdminBansAPIv1 AdminBansAPI = new();
+    public static AdminSanctionsAPIv1 AdminSanctionsAPI = new();
+    public static IOptionsMonitor<AdminsConfig> Config = null!;
+
+    private CancellationTokenSource? syncBansTokenSource = null!;
+    private CancellationTokenSource? syncSanctionsTokenSource = null!;
 
     public Admins(ISwiftlyCore core) : base(core)
     {
@@ -44,7 +47,6 @@ public partial class Admins : BasePlugin
 
     public override void UseSharedInterface(IInterfaceManager interfaceManager)
     {
-
     }
 
     public override void Load(bool hotReload)
@@ -76,13 +78,24 @@ public partial class Admins : BasePlugin
         services.AddSwiftly(Core).AddOptions<AdminsConfig>().BindConfiguration("Main");
 
         var provider = services.BuildServiceProvider();
-        Config = provider.GetRequiredService<IOptions<AdminsConfig>>();
+        Config = provider.GetRequiredService<IOptionsMonitor<AdminsConfig>>();
 
         global::Admins.Groups.Groups.Load();
-        ServerBans.Load();
-        ServerSanctions.Load();
+        ServerBans.Load(null);
+        ServerSanctions.Load(null);
 
         Core.Scheduler.RepeatBySeconds(10.0f, ServerSanctions.ScheduleCheck);
+
+        syncBansTokenSource = Core.Scheduler.RepeatBySeconds(Config.CurrentValue.SyncIntervalInSeconds, ServerBans.DatabaseFetch);
+        syncSanctionsTokenSource = Core.Scheduler.RepeatBySeconds(Config.CurrentValue.SyncIntervalInSeconds, ServerSanctions.DatabaseFetch);
+        Config.OnChange(config =>
+        {
+            syncBansTokenSource?.Cancel();
+            syncBansTokenSource = Core.Scheduler.RepeatBySeconds(config.SyncIntervalInSeconds, ServerBans.DatabaseFetch);
+
+            syncSanctionsTokenSource?.Cancel();
+            syncSanctionsTokenSource = Core.Scheduler.RepeatBySeconds(config.SyncIntervalInSeconds, ServerSanctions.DatabaseFetch);
+        });
     }
 
     public override void Unload()
@@ -98,7 +111,7 @@ public partial class Admins : BasePlugin
             var hostport = Core.ConVar.Find<int>("hostport");
 
             if (hostport == null || serverIp == null) return;
-            if (!Config.Value.UseDatabase) return;
+            if (!Config.CurrentValue.UseDatabase) return;
 
             var database = Core.Database.GetConnection("admins");
             var existingServer = database.Count<Server>(s => s.GUID == ServerGUID);
@@ -140,7 +153,7 @@ public partial class Admins : BasePlugin
         var player = Core.PlayerManager.GetPlayer(playerId);
         if (player == null || player.IsFakeClient) return HookResult.Continue;
 
-        if (teamOnly && text.StartsWith('@') && Config.Value.EnableAdminChat)
+        if (teamOnly && text.StartsWith('@') && Config.CurrentValue.EnableAdminChat)
         {
             bool isAdmin = Core.Permission.PlayerHasPermission(player.SteamID, "admins.chat");
             var players = Core.PlayerManager.GetAllPlayers().Where(p => Core.Permission.PlayerHasPermission(p.SteamID, "admins.chat"));
@@ -159,7 +172,7 @@ public partial class Admins : BasePlugin
             var playerLocalizer = Core.Translation.GetPlayerLocalizer(player);
             player.SendChat(playerLocalizer[
                 "gag.message",
-                Config.Value.Prefix,
+                Config.CurrentValue.Prefix,
                 sanction!.AdminName,
                 sanction!.ExpiresAt == 0 ? playerLocalizer["never"] : DateTimeOffset.FromUnixTimeMilliseconds((long)sanction.ExpiresAt).ToString("yyyy-MM-dd HH:mm:ss"),
                 sanction.Reason

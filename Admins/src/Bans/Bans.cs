@@ -13,14 +13,15 @@ public partial class ServerBans
 
     public static List<IBan> Bans { get; set; } = [];
 
-    public static void Load()
+    public static void Load(Action? onLoaded)
     {
-        if (!Admins.Config.Value.UseDatabase) return;
+        if (!Admins.Config.CurrentValue.UseDatabase) return;
 
         Task.Run(() =>
         {
             var database = Core.Database.GetConnection("admins");
             SetBans([.. database.GetAll<Ban>()]);
+            onLoaded?.Invoke();
         });
     }
 
@@ -29,17 +30,28 @@ public partial class ServerBans
         Bans = bans;
     }
 
+    public static void DatabaseFetch()
+    {
+        Load(null);
+    }
+
+    public static List<IBan> GetBans()
+    {
+        return Bans;
+    }
+
     public static void AddBan(IBan ban)
     {
         Task.Run(() =>
         {
-            if (Admins.Config.Value.UseDatabase)
+            if (Admins.Config.CurrentValue.UseDatabase)
             {
                 var database = Core.Database.GetConnection("admins");
                 var id = database.Insert((Ban)ban);
                 ban.Id = (ulong)id;
             }
             Bans.Add(ban);
+            Admins.AdminBansAPI.TriggerBanAdded(ban);
         });
     }
 
@@ -47,12 +59,13 @@ public partial class ServerBans
     {
         Task.Run(() =>
         {
-            if (Admins.Config.Value.UseDatabase)
+            if (Admins.Config.CurrentValue.UseDatabase)
             {
                 var database = Core.Database.GetConnection("admins");
                 database.Delete((Ban)ban);
             }
             Bans.Remove(ban);
+            Admins.AdminBansAPI.TriggerBanRemoved(ban);
         });
     }
 
@@ -60,7 +73,7 @@ public partial class ServerBans
     {
         Task.Run(() =>
         {
-            if (Admins.Config.Value.UseDatabase)
+            if (Admins.Config.CurrentValue.UseDatabase)
             {
                 var database = Core.Database.GetConnection("admins");
                 database.Update((Ban)ban);
@@ -68,6 +81,20 @@ public partial class ServerBans
 
             Bans.RemoveAt(Bans.FindIndex(b => b.Id == ban.Id));
             Bans.Add(ban);
+            Admins.AdminBansAPI.TriggerBanUpdated(ban);
+        });
+    }
+
+    public static void ClearBans()
+    {
+        Task.Run(() =>
+        {
+            if (Admins.Config.CurrentValue.UseDatabase)
+            {
+                var database = Core.Database.GetConnection("admins");
+                database.DeleteAll<Ban>();
+            }
+            Bans.Clear();
         });
     }
 

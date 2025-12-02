@@ -79,4 +79,13 @@ public interface IAdminAPIv1
     /// Event fired when an admin is loaded.
     /// </summary>
     event Action<IPlayer, IAdmin>? OnAdminLoad;
+
+    /// <summary>
+    /// Gets the Admin Bans API.
+    /// </summary>
+    public IAdminBansAPIv1 AdminBansAPI { get; }
+    /// <summary>
+    /// Gets the Admin Sanctions API.
+    /// </summary>
+    public IAdminSanctionsAPIv1 AdminSanctionsAPI { get; }
 }
