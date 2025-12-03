@@ -15,32 +15,41 @@ using SwiftlyS2.Shared;
 using SwiftlyS2.Shared.Commands;
 using SwiftlyS2.Shared.Events;
 using SwiftlyS2.Shared.Misc;
+using SwiftlyS2.Shared.Players;
 using SwiftlyS2.Shared.Plugins;
 
 namespace Admins;
 
-[PluginMetadata(Id = "Admins", Version = "1.0.0", Name = "Admins", Author = "Swiftly Development Team")]
-public partial class Admins : BasePlugin
+[PluginMetadata(
+    Id = "Admins",
+    Version = "1.0.0",
+    Name = "Admins",
+    Author = "Swiftly Development Team"
+)]
+public sealed partial class Admins : BasePlugin
 {
-    public static Groups.Groups Groups = new();
-    public static ServerAdmins.ServerAdmins ServerAdmins = new();
-    public static string ServerGUID = string.Empty;
-    public static AdminAPIv1 AdminAPI = new();
-    public static AdminBansAPIv1 AdminBansAPI = new();
-    public static AdminSanctionsAPIv1 AdminSanctionsAPI = new();
-    public static AdminMenuAPIv1 AdminsMenuAPI = new();
-    private AdminCommands adminCommands = new();
-    public static IOptionsMonitor<AdminsConfig> Config = null!;
-    public static ISwiftlyCore SwiftlyCore = null!;
+    public static Groups.Groups Groups { get; private set; } = new();
+    public static ServerAdmins.ServerAdmins ServerAdmins { get; private set; } = new();
+    public static AdminAPIv1 AdminAPI { get; private set; } = new();
+    public static AdminBansAPIv1 AdminBansAPI { get; private set; } = new();
+    public static AdminSanctionsAPIv1 AdminSanctionsAPI { get; private set; } = new();
+    public static AdminMenuAPIv1 AdminsMenuAPI { get; private set; } = new();
 
-    private CancellationTokenSource? syncBansTokenSource = null!;
-    private CancellationTokenSource? syncSanctionsTokenSource = null!;
+    public static string ServerGUID { get; private set; } = string.Empty;
+
+    public static IOptionsMonitor<AdminsConfig> Config { get; private set; } = null!;
+    public static ISwiftlyCore SwiftlyCore { get; private set; } = null!;
+
+    private readonly AdminCommands _adminCommands = new();
+
+    private CancellationTokenSource? _syncBansTokenSource;
+    private CancellationTokenSource? _syncSanctionsTokenSource;
 
     public Admins(ISwiftlyCore core) : base(core)
     {
         SwiftlyCore = core;
-        var connection = core.Database.GetConnection("admins");
 
+        var connection = core.Database.GetConnection("admins");
         MigrationRunner.RunMigrations(connection);
     }
 
@@ -55,82 +64,159 @@ public partial class Admins : BasePlugin
 
     public override void Load(bool hotReload)
     {
-        Core.Configuration.InitializeJsonWithModel<AdminsConfig>("config.jsonc", "Main")
+        InitializeConfiguration();
+
+        InitializeServerGuid();
+
+        LoadServerData();
+
+        StartBackgroundTasks();
+
+        ServerSanctions.RegisterAdminSubmenu();
+        ServerBans.RegisterAdminSubmenu();
+        _adminCommands.Init();
+
+        Core.Logger.LogInformation("Admins plugin loaded successfully");
+    }
+
+    private void InitializeConfiguration()
+    {
+        Core.Configuration
+            .InitializeJsonWithModel<AdminsConfig>("config.jsonc", "Main")
             .Configure(builder =>
             {
-                builder.AddJsonFile("config.jsonc", false, true);
+                builder.AddJsonFile("config.jsonc", optional: false, reloadOnChange: true);
             });
 
-        if (!File.Exists(Path.Combine(Core.PluginDataDirectory, "server_id.txt")))
-        {
-            ServerGUID = Guid.NewGuid().ToString();
-            File.WriteAllText(Path.Combine(Core.PluginDataDirectory, "server_id.txt"), ServerGUID);
-            Core.Logger.LogWarning("A new Server GUID has been generated.");
-        }
-        else
-        {
-            ServerGUID = File.ReadAllText(Path.Combine(Core.PluginDataDirectory, "server_id.txt"));
-            if (ServerGUID.Length != 36)
-            {
-                ServerGUID = Guid.NewGuid().ToString();
-                File.WriteAllText(Path.Combine(Core.PluginDataDirectory, "server_id.txt"), ServerGUID);
-                Core.Logger.LogWarning("Invalid Server GUID detected. A new GUID has been generated.");
-            }
-        }
-
         ServiceCollection services = new();
-        services.AddSwiftly(Core).AddOptions<AdminsConfig>().BindConfiguration("Main");
+        services.AddSwiftly(Core)
+            .AddOptions<AdminsConfig>()
+            .BindConfiguration("Main");
 
         var provider = services.BuildServiceProvider();
         Config = provider.GetRequiredService<IOptionsMonitor<AdminsConfig>>();
+    }
 
+    private void InitializeServerGuid()
+    {
+        var guidPath = Path.Combine(Core.PluginDataDirectory, "server_id.txt");
+
+        if (!File.Exists(guidPath))
+        {
+            ServerGUID = Guid.NewGuid().ToString();
+            File.WriteAllText(guidPath, ServerGUID);
+            Core.Logger.LogWarning("Generated new Server GUID: {Guid}", ServerGUID);
+            return;
+        }
+
+        ServerGUID = File.ReadAllText(guidPath).Trim();
+
+        if (!Guid.TryParse(ServerGUID, out _))
+        {
+            ServerGUID = Guid.NewGuid().ToString();
+            File.WriteAllText(guidPath, ServerGUID);
+            Core.Logger.LogWarning("Invalid Server GUID detected. Generated new GUID: {Guid}", ServerGUID);
+        }
+    }
+
+    private void LoadServerData()
+    {
         global::Admins.Groups.Groups.Load();
         ServerBans.Load(null);
         ServerSanctions.Load(null);
 
         Core.Scheduler.RepeatBySeconds(10.0f, ServerSanctions.ScheduleCheck);
+    }
 
-        syncBansTokenSource = Core.Scheduler.RepeatBySeconds(Config.CurrentValue.SyncIntervalInSeconds, ServerBans.DatabaseFetch);
-        syncSanctionsTokenSource = Core.Scheduler.RepeatBySeconds(Config.CurrentValue.SyncIntervalInSeconds, ServerSanctions.DatabaseFetch);
+    private void StartBackgroundTasks()
+    {
+        _syncBansTokenSource = Core.Scheduler.RepeatBySeconds(
+            Config.CurrentValue.SyncIntervalInSeconds,
+            ServerBans.DatabaseFetch
+        );
+
+        _syncSanctionsTokenSource = Core.Scheduler.RepeatBySeconds(
+            Config.CurrentValue.SyncIntervalInSeconds,
+            ServerSanctions.DatabaseFetch
+        );
+
         Config.OnChange(config =>
         {
-            syncBansTokenSource?.Cancel();
-            syncBansTokenSource = Core.Scheduler.RepeatBySeconds(config.SyncIntervalInSeconds, ServerBans.DatabaseFetch);
-
-            syncSanctionsTokenSource?.Cancel();
-            syncSanctionsTokenSource = Core.Scheduler.RepeatBySeconds(config.SyncIntervalInSeconds, ServerSanctions.DatabaseFetch);
+            RestartSyncTasks(config);
         });
+    }
 
-        ServerSanctions.RegisterAdminSubmenu();
-        adminCommands.Init();
+    private void RestartSyncTasks(AdminsConfig config)
+    {
+        _syncBansTokenSource?.Cancel();
+        _syncBansTokenSource = Core.Scheduler.RepeatBySeconds(
+            config.SyncIntervalInSeconds,
+            ServerBans.DatabaseFetch
+        );
+
+        _syncSanctionsTokenSource?.Cancel();
+        _syncSanctionsTokenSource = Core.Scheduler.RepeatBySeconds(
+            config.SyncIntervalInSeconds,
+            ServerSanctions.DatabaseFetch
+        );
+
+        Core.Logger.LogInformation(
+            "Sync tasks restarted with interval: {Interval}s",
+            config.SyncIntervalInSeconds
+        );
     }
 
     public override void Unload()
     {
+        _syncBansTokenSource?.Cancel();
+        _syncSanctionsTokenSource?.Cancel();
+
+        Core.Logger.LogInformation("Admins plugin unloaded successfully");
     }
 
     [EventListener<EventDelegates.OnSteamAPIActivated>]
     public void OnSteamAPIActivated()
     {
+        if (!Config.CurrentValue.UseDatabase)
+        {
+            return;
+        }
+
         Task.Run(() =>
         {
-            var serverIp = Core.Engine.ServerIP;
-            var hostport = Core.ConVar.Find<int>("hostport");
-
-            if (hostport == null || serverIp == null) return;
-            if (!Config.CurrentValue.UseDatabase) return;
-
-            var database = Core.Database.GetConnection("admins");
-            var existingServer = database.Count<Server>(s => s.GUID == ServerGUID);
-            if (existingServer == 0)
+            try
             {
-                var server = new Server
+                var serverIp = Core.Engine.ServerIP;
+                var hostport = Core.ConVar.Find<int>("hostport");
+
+                if (hostport == null || string.IsNullOrEmpty(serverIp))
                 {
-                    IP = serverIp,
-                    Port = hostport.Value,
-                    GUID = ServerGUID
-                };
-                database.Insert(server);
+                    Core.Logger.LogWarning("Unable to register server: missing IP or port");
+                    return;
+                }
+
+                using var database = Core.Database.GetConnection("admins");
+                var existingServer = database.Count<Server>(s => s.GUID == ServerGUID);
+
+                if (existingServer == 0)
+                {
+                    var server = new Server
+                    {
+                        IP = serverIp,
+                        Port = hostport.Value,
+                        GUID = ServerGUID
+                    };
+                    database.Insert(server);
+                    Core.Logger.LogInformation(
+                        "Server registered in database: {IP}:{Port}",
+                        serverIp,
+                        hostport.Value
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                Core.Logger.LogError(ex, "Failed to register server in database");
             }
         });
     }
@@ -138,19 +224,40 @@ public partial class Admins : BasePlugin
     [EventListener<EventDelegates.OnClientSteamAuthorize>]
     public void OnClientSteamAuthorize(IOnClientSteamAuthorizeEvent @event)
     {
-        int playerid = @event.PlayerId;
+        var player = Core.PlayerManager.GetPlayer(@event.PlayerId);
+        if (player == null)
+        {
+            return;
+        }
 
-        var player = Core.PlayerManager.GetPlayer(playerid);
-        if (player == null) return;
-
-        if (!ServerBans.CheckPlayer(player)) return;
+        if (!ServerBans.CheckPlayer(player))
+        {
+            return;
+        }
 
         Task.Run(() =>
         {
-            var admin = AdminAPI.GetAdmin(playerid);
-            if (admin == null) return;
-
-            global::Admins.ServerAdmins.ServerAdmins.AssignAdmin(player, (Admin)admin);
+            try
+            {
+                var admin = AdminAPI.GetAdmin(@event.PlayerId);
+                if (admin != null)
+                {
+                    global::Admins.ServerAdmins.ServerAdmins.AssignAdmin(player, (Admin)admin);
+                    Core.Logger.LogInformation(
+                        "Admin privileges assigned to player: {Name} ({SteamID})",
+                        player.Controller.PlayerName,
+                        player.SteamID
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                Core.Logger.LogError(
+                    ex,
+                    "Failed to assign admin privileges to player: {PlayerId}",
+                    @event.PlayerId
+                );
+            }
         });
     }
 
@@ -158,35 +265,104 @@ public partial class Admins : BasePlugin
     public HookResult OnClientChat(int playerId, string text, bool teamOnly)
     {
         var player = Core.PlayerManager.GetPlayer(playerId);
-        if (player == null || player.IsFakeClient) return HookResult.Continue;
-
-        if (teamOnly && text.StartsWith('@') && Config.CurrentValue.EnableAdminChat)
+        if (player == null || player.IsFakeClient)
         {
-            bool isAdmin = Core.Permission.PlayerHasPermission(player.SteamID, "admins.chat");
-            var players = Core.PlayerManager.GetAllPlayers().Where(p => Core.Permission.PlayerHasPermission(p.SteamID, "admins.chat"));
-            if (!players.Contains(player)) players = players.Append(player);
+            return HookResult.Continue;
+        }
 
-            foreach (var p in players)
-            {
-                var playerLocalizer = Core.Translation.GetPlayerLocalizer(p);
-                p.SendChat(playerLocalizer[isAdmin ? "chat.admin_chat_format" : "chat.player_chat_format", player.Controller.PlayerName, text[1..]]);
-            }
+        if (ShouldHandleAdminChat(text, teamOnly))
+        {
+            HandleAdminChat(player, text);
             return HookResult.Stop;
         }
 
         if (ServerSanctions.IsPlayerGagged(player, out var sanction))
         {
-            var playerLocalizer = Core.Translation.GetPlayerLocalizer(player);
-            player.SendChat(playerLocalizer[
-                "gag.message",
-                Config.CurrentValue.Prefix,
-                sanction!.AdminName,
-                sanction!.ExpiresAt == 0 ? playerLocalizer["never"] : DateTimeOffset.FromUnixTimeMilliseconds((long)sanction.ExpiresAt).ToString("yyyy-MM-dd HH:mm:ss"),
-                sanction.Reason
-            ]);
+            NotifyPlayerGagged(player, sanction!);
             return HookResult.Stop;
         }
 
         return HookResult.Continue;
+    }
+
+    private bool ShouldHandleAdminChat(string text, bool teamOnly)
+    {
+        return teamOnly
+            && text.StartsWith('@')
+            && Config.CurrentValue.EnableAdminChat;
+    }
+
+    private void HandleAdminChat(IPlayer sender, string text)
+    {
+        var hasAdminPermission = Core.Permission.PlayerHasPermission(
+            sender.SteamID,
+            "admins.chat"
+        );
+
+        var recipients = Core.PlayerManager.GetAllPlayers()
+            .Where(p => Core.Permission.PlayerHasPermission(p.SteamID, "admins.chat"))
+            .ToList();
+
+        if (!recipients.Contains(sender))
+        {
+            recipients.Add(sender);
+        }
+
+        var messageContent = text[1..];
+        var formatKey = hasAdminPermission
+            ? "chat.admin_chat_format"
+            : "chat.player_chat_format";
+
+        foreach (var recipient in recipients)
+        {
+            var localizer = Core.Translation.GetPlayerLocalizer(recipient);
+            var message = localizer[formatKey, sender.Controller.PlayerName, messageContent];
+            recipient.SendChat(message);
+        }
+    }
+
+    private void NotifyPlayerGagged(IPlayer player, ISanction sanction)
+    {
+        var localizer = Core.Translation.GetPlayerLocalizer(player);
+        var expiryText = sanction.ExpiresAt == 0
+            ? localizer["never"]
+            : FormatTimestampInTimeZone((long)sanction.ExpiresAt);
+
+        var message = localizer[
+            "gag.message",
+            Config.CurrentValue.Prefix,
+            sanction.AdminName,
+            expiryText,
+            sanction.Reason
+        ];
+
+        player.SendChat(message);
+    }
+
+    public static TimeZoneInfo GetConfiguredTimeZone()
+    {
+        try
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById(Config.CurrentValue.TimeZone);
+        }
+        catch
+        {
+            return TimeZoneInfo.Utc;
+        }
+    }
+
+    public static DateTimeOffset GetCurrentTimeInTimeZone()
+    {
+        var utcNow = DateTimeOffset.UtcNow;
+        var timeZone = GetConfiguredTimeZone();
+        return TimeZoneInfo.ConvertTime(utcNow, timeZone);
+    }
+
+    public static string FormatTimestampInTimeZone(long unixTimeMilliseconds)
+    {
+        var utcTime = DateTimeOffset.FromUnixTimeMilliseconds(unixTimeMilliseconds);
+        var timeZone = GetConfiguredTimeZone();
+        var localTime = TimeZoneInfo.ConvertTime(utcTime, timeZone);
+        return localTime.ToString("yyyy-MM-dd HH:mm:ss");
     }
 }

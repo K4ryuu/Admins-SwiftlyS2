@@ -19,7 +19,7 @@ public interface IAdminMenuAPIv1
     /// <param name="permission">The permissions required to access the submenu.</param>
     /// <param name="getPlayerTranslationFromConsumer">A function to get the player's localized translation for the submenu title.</param>
     /// <param name="submenu">The submenu to register.</param>
-    public void RegisterSubmenu(string translationKey, string[] permission, Func<IPlayer, string, string> getPlayerTranslationFromConsumer, IMenuAPI submenu);
+    public void RegisterSubmenu(string translationKey, string[] permission, Func<IPlayer, string, string> getPlayerTranslationFromConsumer, Func<IPlayer, IMenuAPI> submenu);
 
     /// <summary>
     /// Unregisters a submenu from the admin menu.

@@ -7,7 +7,7 @@ namespace Admins.Menu;
 
 public class AdminMenuAPI
 {
-    private static Dictionary<string, (string[], Func<IPlayer, string, string>, IMenuAPI)> _registeredSubmenus = [];
+    private static Dictionary<string, (string[], Func<IPlayer, string, string>, Func<IPlayer, IMenuAPI>)> _registeredSubmenus = [];
 
     public static IMenuAPI GenerateMenu(IPlayer player)
     {
@@ -24,13 +24,13 @@ public class AdminMenuAPI
             if (!Admins.SwiftlyCore.Permission.PlayerHasPermissions(player.SteamID, entry.Value.Item1))
                 continue;
 
-            builder.AddOption(new SubmenuMenuOption(entry.Value.Item2(player, entry.Key), entry.Value.Item3));
+            builder.AddOption(new SubmenuMenuOption(entry.Value.Item2(player, entry.Key), entry.Value.Item3(player)));
         }
 
         return builder.Build();
     }
 
-    public static void RegisterSubmenu(string translationKey, string[] permission, Func<IPlayer, string, string> getPlayerTranslationFromConsumer, IMenuAPI submenu)
+    public static void RegisterSubmenu(string translationKey, string[] permission, Func<IPlayer, string, string> getPlayerTranslationFromConsumer, Func<IPlayer, IMenuAPI> submenu)
     {
         _registeredSubmenus[translationKey] = (permission, getPlayerTranslationFromConsumer, submenu);
     }

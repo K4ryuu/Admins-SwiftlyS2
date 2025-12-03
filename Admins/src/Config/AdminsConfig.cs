@@ -8,6 +8,7 @@ public class AdminsConfig
     public string Prefix { get; set; } = "[[blue]SwiftlyS2[default]]";
     public bool UseDatabase { get; set; } = true;
     public Color AdminMenuColor { get; set; } = Color.FromHex("#00FEED");
+    public string TimeZone { get; set; } = "UTC";
 
     public float SyncIntervalInSeconds { get; set; } = 30.0f;
 

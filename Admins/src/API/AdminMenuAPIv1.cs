@@ -12,7 +12,7 @@ public class AdminMenuAPIv1 : IAdminMenuAPIv1
         return AdminMenuAPI.GenerateMenu(player);
     }
 
-    public void RegisterSubmenu(string translationKey, string[] permission, Func<IPlayer, string, string> getPlayerTranslationFromConsumer, IMenuAPI submenu)
+    public void RegisterSubmenu(string translationKey, string[] permission, Func<IPlayer, string, string> getPlayerTranslationFromConsumer, Func<IPlayer, IMenuAPI> submenu)
     {
         AdminMenuAPI.RegisterSubmenu(translationKey, permission, getPlayerTranslationFromConsumer, submenu);
     }
