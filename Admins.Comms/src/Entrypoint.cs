@@ -21,6 +21,7 @@ public partial class AdminsComms : BasePlugin
     private ServerComms? _serverComms;
     private CommsManager? _commsManager;
     private ServerCommands? _serverCommands;
+    private GamePlayer? _gamePlayer;
 
     public AdminsComms(ISwiftlyCore core) : base(core)
     {
@@ -47,8 +48,7 @@ public partial class AdminsComms : BasePlugin
 
         _serviceProvider = services.BuildServiceProvider();
 
-        _ = _serviceProvider.GetRequiredService<GamePlayer>();
-
+        _gamePlayer = _serviceProvider.GetRequiredService<GamePlayer>();
         _commsManager = _serviceProvider.GetRequiredService<CommsManager>();
         _serverComms = _serviceProvider.GetRequiredService<ServerComms>();
         _serverCommands = _serviceProvider.GetRequiredService<ServerCommands>();
@@ -77,6 +77,7 @@ public partial class AdminsComms : BasePlugin
             _serverComms!.SetConfigurationManager(_configurationManager);
             _commsManager!.SetConfigurationManager(_configurationManager);
             _serverCommands!.SetConfigurationManager(_configurationManager);
+            _gamePlayer!.SetConfigurationManager(_configurationManager);
         }
 
         if (interfaceManager.HasSharedInterface("Admins.Server.V1"))
