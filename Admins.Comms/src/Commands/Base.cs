@@ -1,4 +1,5 @@
-using Admins.Bans.Manager;
+using Admins.Comms.Manager;
+using Admins.Comms.Players;
 using Admins.Core.Contract;
 using SwiftlyS2.Shared;
 using SwiftlyS2.Shared.Commands;
@@ -7,19 +8,21 @@ using SwiftlyS2.Shared.SteamAPI;
 using SwiftlyS2.Shared.Translation;
 using TimeSpanParserUtil;
 
-namespace Admins.Bans.Commands;
+namespace Admins.Comms.Commands;
 
 public partial class ServerCommands
 {
     private ISwiftlyCore Core = null!;
     private IConfigurationManager ConfigurationManager = null!;
     private IServerManager ServerManager = null!;
-    private BansManager BanManager = null!;
+    private CommsManager CommsManager = null!;
+    private GamePlayer gamePlayer = null!;
 
-    public ServerCommands(ISwiftlyCore core, BansManager bansManager)
+    public ServerCommands(ISwiftlyCore core, CommsManager commsManager, GamePlayer gamePlayer)
     {
         Core = core;
-        BanManager = bansManager;
+        CommsManager = commsManager;
+        this.gamePlayer = gamePlayer;
 
         core.Registrator.Register(this);
     }

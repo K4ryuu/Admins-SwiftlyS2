@@ -259,8 +259,7 @@ public partial class ServerCommands
         {
             var expiryText = expiresAt == 0
                 ? localizer["never"]
-                : DateTimeOffset.FromUnixTimeMilliseconds(expiresAt)
-                    .ToString("yyyy-MM-dd HH:mm:ss");
+                : FormatTimestampInTimeZone(expiresAt);
 
             var message = localizer[
                 "ban.kick_message",
@@ -365,7 +364,7 @@ public partial class ServerCommands
         var localizer = GetPlayerLocalizer(context);
         var expiryText = expiresAt == 0
             ? localizer["never"]
-            : DateTimeOffset.FromUnixTimeMilliseconds(expiresAt).ToString("yyyy-MM-dd HH:mm:ss");
+            : FormatTimestampInTimeZone(expiresAt);
 
         var messageKey = banType == BanType.SteamID ? "command.bano_success" : "command.banipo_success";
         var target = banType == BanType.SteamID ? $"SteamID64 [green]{steamId64}[default]" : $"IP [green]{ipAddress}[default]";

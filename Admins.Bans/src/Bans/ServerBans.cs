@@ -55,6 +55,26 @@ public class ServerBans
         );
     }
 
+    public TimeZoneInfo GetConfiguredTimeZone()
+    {
+        try
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById(_configurationManager.GetCurrentConfiguration()!.TimeZone);
+        }
+        catch
+        {
+            return TimeZoneInfo.Utc;
+        }
+    }
+
+    public string FormatTimestampInTimeZone(long unixTimeMilliseconds)
+    {
+        var utcTime = DateTimeOffset.FromUnixTimeMilliseconds(unixTimeMilliseconds);
+        var timeZone = GetConfiguredTimeZone();
+        var localTime = TimeZoneInfo.ConvertTime(utcTime, timeZone);
+        return localTime.ToString("yyyy-MM-dd HH:mm:ss");
+    }
+
     public void CheckPlayer(IPlayer player)
     {
         var ban = FindActiveBan(player.SteamID, player.IPAddress);
@@ -64,7 +84,7 @@ public class ServerBans
             string kickMessage = localizer[
                 "ban.kick_message",
                 ban.Reason,
-                ban.ExpiresAt == 0 ? localizer["never"] : DateTimeOffset.FromUnixTimeMilliseconds((long)ban.ExpiresAt).ToString("yyyy-MM-dd HH:mm:ss"),
+                ban.ExpiresAt == 0 ? localizer["never"] : FormatTimestampInTimeZone((long)ban.ExpiresAt),
                 ban.AdminName,
                 ban.AdminSteamId64.ToString()
             ];
