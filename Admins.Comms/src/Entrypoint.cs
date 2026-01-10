@@ -3,8 +3,10 @@ using Admins.Comms.Configuration;
 using Admins.Comms.Contract;
 using Admins.Comms.Database;
 using Admins.Comms.Manager;
+using Admins.Comms.Menus;
 using Admins.Comms.Players;
 using Admins.Core.Contract;
+using Admins.Menu.Contract;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SwiftlyS2.Shared;
@@ -18,10 +20,12 @@ public partial class AdminsComms : BasePlugin
     private ServiceProvider? _serviceProvider;
     private Core.Contract.IConfigurationManager? _configurationManager;
     private IServerManager? _serverManager;
+    private IAdminMenuAPI? _adminMenuAPI;
     private ServerComms? _serverComms;
     private CommsManager? _commsManager;
     private ServerCommands? _serverCommands;
     private GamePlayer? _gamePlayer;
+    private AdminMenu? _adminMenu;
 
     public AdminsComms(ISwiftlyCore core) : base(core)
     {
@@ -43,6 +47,7 @@ public partial class AdminsComms : BasePlugin
             .AddSingleton<CommsManager>()
             .AddSingleton<ServerComms>()
             .AddSingleton<ServerCommands>()
+            .AddSingleton<AdminMenu>()
             .AddOptionsWithValidateOnStart<CommsConfiguration>()
             .BindConfiguration("Main");
 
@@ -52,6 +57,7 @@ public partial class AdminsComms : BasePlugin
         _commsManager = _serviceProvider.GetRequiredService<CommsManager>();
         _serverComms = _serviceProvider.GetRequiredService<ServerComms>();
         _serverCommands = _serviceProvider.GetRequiredService<ServerCommands>();
+        _adminMenu = _serviceProvider.GetRequiredService<AdminMenu>();
     }
 
     public override void Unload()
@@ -86,6 +92,13 @@ public partial class AdminsComms : BasePlugin
 
             _serverComms!.SetServerManager(_serverManager);
             _serverCommands!.SetServerManager(_serverManager);
+        }
+
+        if (interfaceManager.HasSharedInterface("Admins.Menu.V1"))
+        {
+            _adminMenuAPI = interfaceManager.GetSharedInterface<IAdminMenuAPI>("Admins.Menu.V1");
+
+            _adminMenu!.SetAdminMenuAPI(_adminMenuAPI);
         }
 
         _serverComms!.Load();

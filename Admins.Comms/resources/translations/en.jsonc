@@ -18,6 +18,33 @@
     "admins.player_chat_format": "[green](To Admins) {0}[default]: {1}",
     "admins.admin_chat_format": "[green](Admin Chat) {0}[default]: {1}",
 
+    "menu.comms.title": "Comms Management",
+    "menu.comms.sanctions.give": "Give Sanctions",
+    "menu.comms.sanctions.remove": "Remove Sanctions",
+    "menu.comms.sanctions.view": "View Sanctions",
+
+    "menu.comms.sanctions.give.type": "Sanction Type",
+    "menu.comms.sanctions.give.online": "Online Players",
+    "menu.comms.sanctions.give.offline": "Offline Players",
+
+    "menu.comms.sanction.give.kind": "Sanction Kind",
+    "menu.comms.sanction.give.kind.ip": "By IP Address",
+    "menu.comms.sanction.give.kind.steamid": "By SteamID",
+
+    "menu.comms.sanction.give.playeridentifier": "Player Identifier",
+    "menu.comms.sanction.give.ip_address": "IP Address",
+    "menu.comms.sanction.give.steamid": "SteamID64",
+
+    "menu.comms.sanction.give.duration": "Duration",
+    "menu.comms.sanction.give.reason": "Reason",
+    "menu.comms.sanction.give.global": "Global Sanction",
+
+    "menu.comms.sanction.give.global.yes": "Yes",
+    "menu.comms.sanction.give.global.no": "No",
+
+    "menu.comms.sanction.confirm": "Confirm Action",
+    "menu.comms.sanction.summary_in_chat": "Summary in chat",
+
     "command.syntax": "{0} Syntax: {1}{2} {3}",
     "command.player_only": "{0} This command can only be used by players.",
     "command.player_not_found": "{0} No player was found with target '[green]{1}[default]'.",

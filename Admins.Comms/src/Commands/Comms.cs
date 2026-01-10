@@ -620,7 +620,7 @@ public partial class ServerCommands
         gamePlayer.ScheduleCheck();
     }
 
-    private void ApplySanction(
+    public void ApplySanction(
         List<IPlayer> players,
         ICommandContext context,
         SanctionKind sanctionKind,
@@ -656,7 +656,7 @@ public partial class ServerCommands
         NotifySanctionApplied(players, context.Sender, sanctionKind, expiresAt, adminName, reason);
     }
 
-    private void NotifySanctionApplied(
+    public void NotifySanctionApplied(
         List<IPlayer> players,
         IPlayer? sender,
         SanctionKind sanctionKind,
@@ -684,7 +684,7 @@ public partial class ServerCommands
         });
     }
 
-    private void RemoveSanctions(
+    public void RemoveSanctions(
         List<IPlayer> players,
         ICommandContext context,
         SanctionKind sanctionKind,
@@ -730,7 +730,7 @@ public partial class ServerCommands
         return removedCount;
     }
 
-    private void ApplyOfflineSanction(
+    public void ApplyOfflineSanction(
         ICommandContext context,
         ulong steamId64,
         SanctionKind sanctionKind,
@@ -784,7 +784,7 @@ public partial class ServerCommands
         context.Reply(message);
     }
 
-    private void ApplyOfflineIpSanction(
+    public void ApplyOfflineIpSanction(
         ICommandContext context,
         string ipAddress,
         SanctionKind sanctionKind,

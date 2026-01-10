@@ -1,4 +1,5 @@
 using SwiftlyS2.Shared.Menus;
+using SwiftlyS2.Shared.Natives;
 using SwiftlyS2.Shared.Players;
 
 namespace Admins.Menu.Contract;
@@ -24,4 +25,9 @@ public interface IAdminMenuAPI
     /// <param name="player">The player for whom the admin menu is generated.</param>
     /// <returns>The generated admin menu.</returns>
     public IMenuAPI CreateAdminMenu(IPlayer player);
+    /// <summary>
+    /// Gets the menu color from the configuration.
+    /// </summary>
+    /// <returns>The menu color.</returns>
+    public Color GetMenuColor();
 }
