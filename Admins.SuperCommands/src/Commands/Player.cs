@@ -1,0 +1,554 @@
+using SwiftlyS2.Shared.Commands;
+using SwiftlyS2.Shared.Players;
+using SwiftlyS2.Shared.SchemaDefinitions;
+
+namespace Admins.SuperCommands.Commands;
+
+public partial class ServerCommands
+{
+    [Command("hp", permission: "admins.commands.hp")]
+    public void Command_HP(ICommandContext context)
+    {
+        if (!context.IsSentByPlayer)
+        {
+            SendByPlayerOnly(context);
+            return;
+        }
+
+        if (!ValidateArgsCount(context, 2, "hp", ["<player>", "<health>", "[armour]", "[helmet]"]))
+        {
+            return;
+        }
+
+        var players = FindTargetPlayers(context, context.Args[0]);
+        if (players == null)
+        {
+            return;
+        }
+
+        if (!TryParseInt(context, context.Args[1], "health", 0, 100, out var health))
+        {
+            return;
+        }
+
+        var armour = 0;
+        if (context.Args.Length >= 3 && !TryParseInt(context, context.Args[2], "armour", 0, 100, out armour))
+        {
+            return;
+        }
+
+        var helmet = false;
+        if (context.Args.Length >= 4 && !TryParseBool(context, context.Args[3], "helmet", out helmet))
+        {
+            return;
+        }
+
+        foreach (var player in players)
+        {
+            ApplyHealthAndArmor(player, health, armour, helmet);
+        }
+
+        NotifyHealthChanged(players, context.Sender!, health, armour, helmet);
+    }
+
+    [Command("freeze", permission: "admins.commands.freeze")]
+    public void Command_Freeze(ICommandContext context)
+    {
+        if (!context.IsSentByPlayer)
+        {
+            SendByPlayerOnly(context);
+            return;
+        }
+
+        if (!ValidateArgsCount(context, 1, "freeze", ["<player>"]))
+        {
+            return;
+        }
+
+        var players = FindTargetPlayers(context, context.Args[0]);
+        if (players == null)
+        {
+            return;
+        }
+
+        foreach (var player in players)
+        {
+            SetPlayerMoveType(player, MoveType_t.MOVETYPE_INVALID);
+        }
+
+        NotifyPlayersAction(players, context.Sender!, "command.freeze_success");
+    }
+
+    [Command("unfreeze", permission: "admins.commands.unfreeze")]
+    public void Command_Unfreeze(ICommandContext context)
+    {
+        if (!context.IsSentByPlayer)
+        {
+            SendByPlayerOnly(context);
+            return;
+        }
+
+        if (!ValidateArgsCount(context, 1, "unfreeze", ["<player>"]))
+        {
+            return;
+        }
+
+        var players = FindTargetPlayers(context, context.Args[0]);
+        if (players == null)
+        {
+            return;
+        }
+
+        foreach (var player in players)
+        {
+            SetPlayerMoveType(player, MoveType_t.MOVETYPE_WALK);
+        }
+
+        NotifyPlayersAction(players, context.Sender!, "command.unfreeze_success");
+    }
+
+    [Command("noclip", permission: "admins.commands.noclip")]
+    public void Command_Noclip(ICommandContext context)
+    {
+        if (!context.IsSentByPlayer)
+        {
+            SendByPlayerOnly(context);
+            return;
+        }
+
+        var pawn = context.Sender!.PlayerPawn;
+        var localizer = GetPlayerLocalizer(context);
+
+        if (!IsValidAlivePawn(pawn))
+        {
+            context.Reply(localizer["command.noclip_no_pawn", ConfigurationManager.GetCurrentConfiguration()!.Prefix]);
+            return;
+        }
+
+        if (pawn!.MoveType == MoveType_t.MOVETYPE_NOCLIP)
+        {
+            SetPlayerMoveType(context.Sender!, MoveType_t.MOVETYPE_WALK);
+            context.Reply(localizer["command.noclip_disabled", ConfigurationManager.GetCurrentConfiguration()!.Prefix]);
+        }
+        else
+        {
+            SetPlayerMoveType(context.Sender!, MoveType_t.MOVETYPE_NOCLIP);
+            context.Reply(localizer["command.noclip_enabled", ConfigurationManager.GetCurrentConfiguration()!.Prefix]);
+        }
+    }
+
+    [Command("setspeed", permission: "admins.commands.setspeed")]
+    public void Command_SetSpeed(ICommandContext context)
+    {
+        if (!context.IsSentByPlayer)
+        {
+            SendByPlayerOnly(context);
+            return;
+        }
+
+        if (!ValidateArgsCount(context, 1, "setspeed", ["<speed_multiplier>"]))
+        {
+            return;
+        }
+
+        if (!TryParseFloat(context, context.Args[0], "speed_multiplier", 0.1f, 10.0f, out var speedMultiplier))
+        {
+            return;
+        }
+
+        var pawn = context.Sender!.PlayerPawn;
+        var localizer = GetPlayerLocalizer(context);
+
+        if (!IsValidAlivePawn(pawn))
+        {
+            context.Reply(localizer["command.setspeed_no_pawn", ConfigurationManager.GetCurrentConfiguration()!.Prefix]);
+            return;
+        }
+
+        pawn!.VelocityModifier = speedMultiplier;
+        pawn.VelocityModifierUpdated();
+
+        context.Reply(localizer["command.setspeed_success", ConfigurationManager.GetCurrentConfiguration()!.Prefix, speedMultiplier]);
+    }
+
+    [Command("setgravity", permission: "admins.commands.setgravity")]
+    public void Command_SetGravity(ICommandContext context)
+    {
+        if (!context.IsSentByPlayer)
+        {
+            SendByPlayerOnly(context);
+            return;
+        }
+
+        if (!ValidateArgsCount(context, 1, "setgravity", ["<gravity_multiplier>"]))
+        {
+            return;
+        }
+
+        if (!TryParseFloat(context, context.Args[0], "gravity_multiplier", 0.1f, 10.0f, out var gravityMultiplier))
+        {
+            return;
+        }
+
+        var pawn = context.Sender!.PlayerPawn;
+        var localizer = GetPlayerLocalizer(context);
+
+        if (!IsValidAlivePawn(pawn))
+        {
+            context.Reply(localizer["command.setgravity_no_pawn", ConfigurationManager.GetCurrentConfiguration()!.Prefix]);
+            return;
+        }
+
+        pawn!.GravityScale = gravityMultiplier;
+        pawn.GravityScaleUpdated();
+
+        context.Reply(localizer["command.setgravity_success", ConfigurationManager.GetCurrentConfiguration()!.Prefix, gravityMultiplier]);
+    }
+
+    [Command("slay", permission: "admins.commands.slay")]
+    public void Command_Slay(ICommandContext context)
+    {
+        if (!context.IsSentByPlayer)
+        {
+            SendByPlayerOnly(context);
+            return;
+        }
+
+        if (!ValidateArgsCount(context, 1, "slay", ["<player>"]))
+        {
+            return;
+        }
+
+        var players = FindTargetPlayers(context, context.Args[0]);
+        if (players == null)
+        {
+            return;
+        }
+
+        foreach (var player in players)
+        {
+            SlayPlayer(player);
+        }
+
+        NotifyPlayersAction(players, context.Sender!, "command.slay_success");
+    }
+
+    [Command("slap", permission: "admins.commands.slap")]
+    public void Command_Slap(ICommandContext context)
+    {
+        if (!context.IsSentByPlayer)
+        {
+            SendByPlayerOnly(context);
+            return;
+        }
+
+        if (!ValidateArgsCount(context, 1, "slap", ["<player>", "[damage]"]))
+        {
+            return;
+        }
+
+        var players = FindTargetPlayers(context, context.Args[0]);
+        if (players == null)
+        {
+            return;
+        }
+
+        var damage = 0;
+        if (context.Args.Length >= 2 && !TryParseInt(context, context.Args[1], "damage", 0, 100, out damage))
+        {
+            return;
+        }
+
+        foreach (var player in players)
+        {
+            ApplySlap(player, damage);
+        }
+
+        NotifyPlayersAction(players, context.Sender!, "command.slap_success");
+    }
+
+    [Command("rename", permission: "admins.commands.rename")]
+    public void Command_Rename(ICommandContext context)
+    {
+        if (!context.IsSentByPlayer)
+        {
+            SendByPlayerOnly(context);
+            return;
+        }
+
+        if (!ValidateArgsCount(context, 2, "rename", ["<player>", "<new_name>"]))
+        {
+            return;
+        }
+
+        var players = FindTargetPlayers(context, context.Args[0]);
+        if (players == null)
+        {
+            return;
+        }
+
+        var oldNames = new Dictionary<IPlayer, string>();
+        var newName = context.Args[1];
+
+        foreach (var player in players)
+        {
+            if (player.Controller != null && player.Controller.IsValid)
+            {
+                oldNames[player] = player.Controller.PlayerName;
+                player.Controller.PlayerName = newName;
+                player.Controller.PlayerNameUpdated();
+            }
+        }
+
+        NotifyRename(players, context.Sender!, oldNames, newName);
+    }
+
+    [Command("givemoney", permission: "admins.commands.givemoney")]
+    public void Command_GiveMoney(ICommandContext context)
+    {
+        if (!context.IsSentByPlayer)
+        {
+            SendByPlayerOnly(context);
+            return;
+        }
+
+        if (!ValidateArgsCount(context, 2, "givemoney", ["<player>", "<amount>"]))
+        {
+            return;
+        }
+
+        var players = FindTargetPlayers(context, context.Args[0]);
+        if (players == null)
+        {
+            return;
+        }
+
+        if (!TryParseInt(context, context.Args[1], "amount", 1, 16000, out var amount))
+        {
+            return;
+        }
+
+        foreach (var player in players)
+        {
+            ModifyPlayerMoney(player, amount, isAdditive: true);
+        }
+
+        NotifyMoneyChanged(players, context.Sender!, amount, "command.givemoney_success");
+    }
+
+    [Command("setmoney", permission: "admins.commands.setmoney")]
+    public void Command_SetMoney(ICommandContext context)
+    {
+        if (!context.IsSentByPlayer)
+        {
+            SendByPlayerOnly(context);
+            return;
+        }
+
+        if (!ValidateArgsCount(context, 2, "setmoney", ["<player>", "<amount>"]))
+        {
+            return;
+        }
+
+        var players = FindTargetPlayers(context, context.Args[0]);
+        if (players == null)
+        {
+            return;
+        }
+
+        if (!TryParseInt(context, context.Args[1], "amount", 0, 16000, out var amount))
+        {
+            return;
+        }
+
+        foreach (var player in players)
+        {
+            ModifyPlayerMoney(player, amount, isAdditive: false);
+        }
+
+        NotifyMoneyChanged(players, context.Sender!, amount, "command.setmoney_success");
+    }
+
+    private void ApplyHealthAndArmor(IPlayer player, int health, int armour, bool helmet)
+    {
+        var pawn = player.PlayerPawn;
+        if (pawn == null || !pawn.IsValid || pawn.LifeState != (byte)LifeState_t.LIFE_ALIVE)
+        {
+            return;
+        }
+
+        if (health <= 0)
+        {
+            pawn.CommitSuicide(false, false);
+        }
+        else
+        {
+            pawn.Health = health;
+            pawn.HealthUpdated();
+        }
+
+        var itemServices = pawn.ItemServices;
+        var weaponServices = pawn.WeaponServices;
+        if (itemServices != null && itemServices.IsValid && weaponServices != null && weaponServices.IsValid)
+        {
+            if (helmet)
+            {
+                itemServices.GiveItem("item_assaultsuit");
+            }
+            else
+            {
+                var weapons = weaponServices.MyValidWeapons;
+                foreach (var weapon in weapons)
+                {
+                    if (weapon.AttributeManager.Item.ItemDefinitionIndex == 51)
+                    {
+                        weaponServices.RemoveWeapon(weapon);
+                        break;
+                    }
+                }
+            }
+        }
+
+        pawn.ArmorValue = armour;
+        pawn.ArmorValueUpdated();
+    }
+
+    private void NotifyHealthChanged(List<IPlayer> players, IPlayer sender, int health, int armour, bool helmet)
+    {
+        var adminName = sender.Controller.PlayerName;
+
+        SendMessageToPlayers(players, sender, (p, localizer) =>
+        {
+            var playerName = GetPlayerName(p);
+            return (localizer[
+                "command.hp_success",
+                ConfigurationManager.GetCurrentConfiguration()!.Prefix,
+                adminName,
+                playerName,
+                health,
+                armour,
+                helmet
+            ], MessageType.Chat);
+        });
+    }
+
+    private void ModifyPlayerMoney(IPlayer player, int amount, bool isAdditive)
+    {
+        var moneyServices = player.Controller.InGameMoneyServices;
+        if (moneyServices != null && moneyServices.IsValid)
+        {
+            if (isAdditive)
+            {
+                moneyServices.Account += amount;
+            }
+            else
+            {
+                moneyServices.Account = amount;
+            }
+            moneyServices.AccountUpdated();
+        }
+    }
+
+    private void NotifyMoneyChanged(List<IPlayer> players, IPlayer sender, int amount, string messageKey)
+    {
+        var adminName = sender.Controller.PlayerName;
+
+        SendMessageToPlayers(players, sender, (p, localizer) =>
+        {
+            var playerName = GetPlayerName(p);
+            return (localizer[
+                messageKey,
+                ConfigurationManager.GetCurrentConfiguration()!.Prefix,
+                adminName,
+                amount,
+                playerName
+            ], MessageType.Chat);
+        });
+    }
+
+    private void SetPlayerMoveType(IPlayer player, MoveType_t moveType)
+    {
+        var pawn = player.PlayerPawn;
+        if (pawn == null || !pawn.IsValid || pawn.LifeState != (byte)LifeState_t.LIFE_ALIVE)
+        {
+            return;
+        }
+
+        pawn.ActualMoveType = moveType;
+        pawn.MoveType = moveType;
+        pawn.MoveTypeUpdated();
+    }
+
+    private bool IsValidAlivePawn(CCSPlayerPawn? pawn)
+    {
+        return pawn != null && pawn!.IsValid && pawn!.LifeState == (byte)LifeState_t.LIFE_ALIVE;
+    }
+
+    private void SlayPlayer(IPlayer player)
+    {
+        var pawn = player.PlayerPawn;
+        if (pawn == null || !pawn.IsValid || pawn.LifeState != (byte)LifeState_t.LIFE_ALIVE)
+        {
+            return;
+        }
+
+        pawn.CommitSuicide(false, false);
+    }
+
+    private void ApplySlap(IPlayer player, int damage)
+    {
+        var pawn = player.PlayerPawn;
+        if (pawn == null || !pawn.IsValid || pawn.LifeState != (byte)LifeState_t.LIFE_ALIVE)
+        {
+            return;
+        }
+
+        pawn.Health = Math.Max(pawn.Health - damage, 0);
+        pawn.HealthUpdated();
+
+        if (pawn.Health == 0)
+        {
+            pawn.CommitSuicide(false, false);
+        }
+        else
+        {
+            pawn.Velocity.X.Value += (float)Random.Shared.NextInt64(50, 230) * (Random.Shared.NextDouble() < 0.5 ? -1 : 1);
+            pawn.Velocity.Y.Value += (float)Random.Shared.NextInt64(50, 230) * (Random.Shared.NextDouble() < 0.5 ? -1 : 1);
+            pawn.Velocity.Z.Value += Random.Shared.NextInt64(100, 300);
+            pawn.VelocityUpdated();
+        }
+    }
+
+    private void NotifyPlayersAction(List<IPlayer> players, IPlayer sender, string messageKey)
+    {
+        var adminName = sender.Controller.PlayerName;
+
+        SendMessageToPlayers(players, sender, (p, localizer) =>
+        {
+            var playerName = GetPlayerName(p);
+            return (localizer[
+                messageKey,
+                ConfigurationManager.GetCurrentConfiguration()!.Prefix,
+                adminName,
+                playerName
+            ], MessageType.Chat);
+        });
+    }
+
+    private void NotifyRename(List<IPlayer> players, IPlayer sender, Dictionary<IPlayer, string> oldNames, string newName)
+    {
+        var adminName = sender.Controller.PlayerName;
+
+        SendMessageToPlayers(players, sender, (p, localizer) =>
+        {
+            var oldName = oldNames.ContainsKey(p) ? oldNames[p] : "Unknown";
+            return (localizer[
+                "command.rename_success",
+                ConfigurationManager.GetCurrentConfiguration()!.Prefix,
+                adminName,
+                oldName,
+                newName
+            ], MessageType.Chat);
+        });
+    }
+}
