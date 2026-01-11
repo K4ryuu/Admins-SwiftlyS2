@@ -8,7 +8,7 @@ public class AddAdminsTable : Migration
     public override void Up()
     {
         Create.Table("Admins")
-            .WithColumn("Id").AsInt64().PrimaryKey().NotNullable()
+            .WithColumn("Id").AsInt64().PrimaryKey().Identity().NotNullable()
             .WithColumn("SteamId64").AsInt64().Unique().NotNullable()
             .WithColumn("Username").AsString().Unique().NotNullable()
             .WithColumn("Permissions").AsString(16384).NotNullable()

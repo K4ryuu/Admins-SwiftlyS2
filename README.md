@@ -24,4 +24,4 @@
 
 ## Database Connection Key
 
-The database connection is using the key `admins`. It supports only MySQL, MariaDB and PostgreSQL.
+The database connection is using the key `admins`. It supports SQLite, MySQL, MariaDB and PostgreSQL.
