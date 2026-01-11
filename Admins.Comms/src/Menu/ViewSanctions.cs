@@ -39,7 +39,7 @@ public partial class AdminMenu
                         "menu.comms.sanctions.remove_summary_in_chat",
                         sanction.SanctionType.ToString(),
                         sanction.SanctionKind.ToString(),
-                        sanction.SteamId64,
+                        sanction.SanctionType == SanctionType.SteamID ? sanction.SteamId64 : sanction.PlayerIp,
                         TimeSpan.FromMilliseconds(sanction.Length),
                         sanction.Reason,
                         sanction.GlobalSanction ? localizer["yes"] : localizer["no"]

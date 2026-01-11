@@ -3,8 +3,10 @@ using Admins.Bans.Configuration;
 using Admins.Bans.Contract;
 using Admins.Bans.Database;
 using Admins.Bans.Manager;
+using Admins.Bans.Menus;
 using Admins.Bans.Players;
 using Admins.Core.Contract;
+using Admins.Menu.Contract;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SwiftlyS2.Shared;
@@ -21,6 +23,8 @@ public partial class AdminsBans : BasePlugin
     private ServerBans? _serverBans;
     private BansManager? _bansManager;
     private ServerCommands? _serverCommands;
+    private AdminMenu? _adminMenu;
+    private IAdminMenuAPI? _adminMenuAPI;
 
     public AdminsBans(ISwiftlyCore core) : base(core)
     {
@@ -42,6 +46,7 @@ public partial class AdminsBans : BasePlugin
             .AddSingleton<BansManager>()
             .AddSingleton<ServerBans>()
             .AddSingleton<ServerCommands>()
+            .AddSingleton<AdminMenu>()
             .AddOptionsWithValidateOnStart<BansConfiguration>()
             .BindConfiguration("Main");
 
@@ -52,6 +57,7 @@ public partial class AdminsBans : BasePlugin
         _bansManager = _serviceProvider.GetRequiredService<BansManager>();
         _serverBans = _serviceProvider.GetRequiredService<ServerBans>();
         _serverCommands = _serviceProvider.GetRequiredService<ServerCommands>();
+        _adminMenu = _serviceProvider.GetRequiredService<AdminMenu>();
     }
 
     public override void Unload()
@@ -77,6 +83,7 @@ public partial class AdminsBans : BasePlugin
             _serverBans!.SetConfigurationManager(_configurationManager);
             _bansManager!.SetConfigurationManager(_configurationManager);
             _serverCommands!.SetConfigurationManager(_configurationManager);
+            _adminMenu!.SetConfigurationManager(_configurationManager);
         }
 
         if (interfaceManager.HasSharedInterface("Admins.Server.V1"))
@@ -85,8 +92,17 @@ public partial class AdminsBans : BasePlugin
 
             _serverBans!.SetServerManager(_serverManager);
             _serverCommands!.SetServerManager(_serverManager);
+            _adminMenu!.SetServerManager(_serverManager);
+        }
+
+        if (interfaceManager.HasSharedInterface("Admins.Menu.V1"))
+        {
+            _adminMenuAPI = interfaceManager.GetSharedInterface<IAdminMenuAPI>("Admins.Menu.V1");
+
+            _adminMenu!.SetAdminMenuAPI(_adminMenuAPI);
         }
 
         _serverBans!.Load();
+        _adminMenu!.LoadAdminMenu();
     }
 }

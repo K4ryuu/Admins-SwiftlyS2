@@ -212,7 +212,7 @@ public partial class ServerCommands
     /// </summary>
     /// <param name="duration">The duration.</param>
     /// <returns>Unix timestamp in milliseconds, or 0 for permanent.</returns>
-    private long CalculateExpiresAt(TimeSpan duration)
+    public long CalculateExpiresAt(TimeSpan duration)
     {
         return duration.TotalMilliseconds == 0
             ? 0

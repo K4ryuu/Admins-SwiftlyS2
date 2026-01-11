@@ -214,7 +214,7 @@ public partial class ServerCommands
         ApplyOfflineBan(context, 0, ipAddress, BanType.IP, duration, reason, isGlobal: true);
     }
 
-    private void ApplyBan(
+    public void ApplyBan(
         List<IPlayer> players,
         ICommandContext context,
         BanType banType,
@@ -248,7 +248,7 @@ public partial class ServerCommands
         NotifyBanApplied(players, context.Sender, expiresAt, adminName, reason);
     }
 
-    private void NotifyBanApplied(
+    public void NotifyBanApplied(
         List<IPlayer> players,
         IPlayer? sender,
         long expiresAt,
@@ -273,7 +273,7 @@ public partial class ServerCommands
         });
     }
 
-    private void KickBannedPlayers(List<IPlayer> players)
+    public void KickBannedPlayers(List<IPlayer> players)
     {
         Core.Scheduler.NextTick(() =>
         {
