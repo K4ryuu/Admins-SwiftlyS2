@@ -163,7 +163,7 @@ public partial class ServerCommands
 
     private async void HandleEditAdmin(ICommandContext context)
     {
-        if (!await ValidateArgsCountAsync(context, 4, "admins edit", ["<steamid64>", "<username>", "<immunity>", "[permissions]", "[groups]", "[server_guids]"]))
+        if (!await ValidateArgsCountAsync(context, 3, "admins edit", ["<steamid64>", "<username|groups|permissions|servers|immunity>", "<value>"]))
             return;
 
         var args = context.Args;
@@ -171,59 +171,6 @@ public partial class ServerCommands
 
         if (!TryParseSteamID(context, args[1], out var steamId64))
             return;
-
-        var username = args[2];
-
-        if (!uint.TryParse(args[3], out var immunity))
-        {
-            await context.ReplyAsync(localizer[
-                "command.admins.invalid_immunity",
-                ConfigurationManager.GetCurrentConfiguration()!.Prefix,
-                args[3]
-            ]);
-            return;
-        }
-
-        var permissions = args.Length > 4 && !string.IsNullOrEmpty(args[4])
-            ? args[4].Split(',', StringSplitOptions.RemoveEmptyEntries).Select(p => p.Trim()).ToList()
-            : new List<string>();
-
-        var groups = args.Length > 5 && !string.IsNullOrEmpty(args[5])
-            ? args[5].Split(',', StringSplitOptions.RemoveEmptyEntries).Select(g => g.Trim()).ToList()
-            : new List<string>();
-
-        var additionalServers = args.Length > 6 && !string.IsNullOrEmpty(args[6])
-            ? args[6].Split(',', StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToList()
-            : new List<string>();
-
-        // Validate server GUIDs
-        foreach (var serverGuid in additionalServers)
-        {
-            if (!Guid.TryParse(serverGuid, out _))
-            {
-                await context.ReplyAsync(localizer[
-                    "command.admins.invalid_server_guid",
-                    ConfigurationManager.GetCurrentConfiguration()!.Prefix,
-                    serverGuid
-                ]);
-                return;
-            }
-        }
-
-        // Validate group names exist
-        foreach (var groupName in groups)
-        {
-            var group = _groupsManager!.GetGroup(groupName);
-            if (group == null)
-            {
-                await context.ReplyAsync(localizer[
-                    "command.admins.group_not_found",
-                    ConfigurationManager.GetCurrentConfiguration()!.Prefix,
-                    groupName
-                ]);
-                return;
-            }
-        }
 
         var existingAdmin = await _adminsManager!.GetAdminBySteamId64Async(steamId64);
 
@@ -237,19 +184,85 @@ public partial class ServerCommands
             return;
         }
 
-        // Update admin properties
-        existingAdmin.Username = username;
-        existingAdmin.Immunity = immunity;
-        existingAdmin.Groups = groups;
-        existingAdmin.Permissions = permissions;
+        var field = args[2].ToLower();
+        var value = args[3];
 
-        // Add additional servers if provided
-        foreach (var server in additionalServers)
+        switch (field)
         {
-            if (!existingAdmin.Servers.Contains(server))
-            {
-                existingAdmin.Servers.Add(server);
-            }
+            case "username":
+                existingAdmin.Username = value;
+                break;
+
+            case "immunity":
+                if (!uint.TryParse(value, out var immunity))
+                {
+                    await context.ReplyAsync(localizer[
+                        "command.admins.invalid_immunity",
+                        ConfigurationManager.GetCurrentConfiguration()!.Prefix,
+                        value
+                    ]);
+                    return;
+                }
+                existingAdmin.Immunity = immunity;
+                break;
+
+            case "permissions":
+                var permissions = value.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(p => p.Trim())
+                    .ToList();
+                existingAdmin.Permissions = permissions;
+                break;
+
+            case "groups":
+                var groups = value.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(g => g.Trim())
+                    .ToList();
+
+                // Validate group names exist
+                foreach (var groupName in groups)
+                {
+                    var group = _groupsManager!.GetGroup(groupName);
+                    if (group == null)
+                    {
+                        await context.ReplyAsync(localizer[
+                            "command.admins.group_not_found",
+                            ConfigurationManager.GetCurrentConfiguration()!.Prefix,
+                            groupName
+                        ]);
+                        return;
+                    }
+                }
+                existingAdmin.Groups = groups;
+                break;
+
+            case "servers":
+                var servers = value.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(s => s.Trim())
+                    .ToList();
+
+                // Validate server GUIDs
+                foreach (var serverGuid in servers)
+                {
+                    if (!Guid.TryParse(serverGuid, out _))
+                    {
+                        await context.ReplyAsync(localizer[
+                            "command.admins.invalid_server_guid",
+                            ConfigurationManager.GetCurrentConfiguration()!.Prefix,
+                            serverGuid
+                        ]);
+                        return;
+                    }
+                }
+                existingAdmin.Servers = servers;
+                break;
+
+            default:
+                await context.ReplyAsync(localizer[
+                    "command.admins.edit.invalid_field",
+                    ConfigurationManager.GetCurrentConfiguration()!.Prefix,
+                    field
+                ]);
+                return;
         }
 
         await _adminsManager.UpdateAdminAsync(existingAdmin);
@@ -257,8 +270,10 @@ public partial class ServerCommands
         await context.ReplyAsync(localizer[
             "command.admins.edit.success",
             ConfigurationManager.GetCurrentConfiguration()!.Prefix,
-            username,
-            steamId64
+            existingAdmin.Username,
+            steamId64,
+            field,
+            value
         ]);
     }
 
