@@ -30,6 +30,10 @@ public class CommsManager : ICommsManager
     {
         Task.Run(async () =>
         {
+            var timestamp = (ulong)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            sanction.CreatedAt = timestamp;
+            sanction.UpdatedAt = timestamp;
+
             if (_configurationManager.GetConfigurationMonitor()!.CurrentValue.UseDatabase == true)
             {
                 var db = Core.Database.GetConnection("admins");
@@ -103,6 +107,8 @@ public class CommsManager : ICommsManager
     {
         Task.Run(async () =>
         {
+            sanction.UpdatedAt = (ulong)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
             if (_configurationManager.GetConfigurationMonitor()!.CurrentValue.UseDatabase == true)
             {
                 var db = Core.Database.GetConnection("admins");

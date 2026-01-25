@@ -8,4 +8,5 @@ public class CoreConfiguration : ICoreConfiguration
     public bool UseDatabase { get; set; } = true;
     public string TimeZone { get; set; } = "UTC";
     public float BansDatabaseSyncIntervalSeconds { get; set; } = 30f;
+    public float SanctionsDatabaseSyncIntervalSeconds { get; set; } = 30f;
 }

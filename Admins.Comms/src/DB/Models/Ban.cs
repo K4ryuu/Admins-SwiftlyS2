@@ -45,4 +45,10 @@ public class Sanction : ISanction
 
     [Column("GlobalSanction")]
     public bool GlobalSanction { get; set; }
+
+    [Column("CreatedAt")]
+    public ulong CreatedAt { get; set; }
+
+    [Column("UpdatedAt")]
+    public ulong UpdatedAt { get; set; }
 }

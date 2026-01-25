@@ -9,6 +9,7 @@ using Admins.Core.Contract;
 using Admins.Menu.Contract;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using SwiftlyS2.Shared;
 using SwiftlyS2.Shared.Plugins;
 
@@ -106,5 +107,33 @@ public partial class AdminsComms : BasePlugin
 
         _serverComms!.Load();
         _adminMenu!.LoadAdminMenu();
+
+        // Start periodic sanctions sync if enabled
+        StartSanctionsSyncTimer();
+    }
+
+    private void StartSanctionsSyncTimer()
+    {
+        if (_configurationManager?.GetConfigurationMonitor()?.CurrentValue == null)
+            return;
+
+        var intervalSeconds = _configurationManager.GetConfigurationMonitor()!.CurrentValue.SanctionsDatabaseSyncIntervalSeconds;
+
+        if (intervalSeconds > 0 && _configurationManager.GetConfigurationMonitor()!.CurrentValue.UseDatabase)
+        {
+            Core.Logger.LogInformation($"Starting sanctions database sync timer with interval of {intervalSeconds} seconds");
+
+            Core.Scheduler.RepeatBySeconds(intervalSeconds, () =>
+            {
+                Task.Run(async () =>
+                {
+                    await _serverComms!.SyncSanctionsFromDatabase();
+                });
+            });
+        }
+        else
+        {
+            Core.Logger.LogInformation("Sanctions database sync is disabled");
+        }
     }
 }

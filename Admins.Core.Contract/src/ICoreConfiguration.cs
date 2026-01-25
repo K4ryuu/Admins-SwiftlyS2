@@ -18,4 +18,8 @@ public interface ICoreConfiguration
     /// The interval in seconds to sync bans from the database. Set to 0 to disable automatic sync.
     /// </summary>
     public float BansDatabaseSyncIntervalSeconds { get; set; }
+    /// <summary>
+    /// The interval in seconds to sync sanctions from the database. Set to 0 to disable automatic sync.
+    /// </summary>
+    public float SanctionsDatabaseSyncIntervalSeconds { get; set; }
 }

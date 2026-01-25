@@ -27,4 +27,6 @@ public interface ISanction
     string AdminName { get; set; }
     string Server { get; set; }
     bool GlobalSanction { get; set; }
+    ulong CreatedAt { get; set; }
+    ulong UpdatedAt { get; set; }
 }
