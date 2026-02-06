@@ -85,9 +85,6 @@ public class ServerBans
                 // Update last sync timestamp to the latest UpdatedAt value
                 var maxUpdatedAt = newBans.Max(b => b.UpdatedAt);
                 _lastSyncTimestamp = Math.Max(_lastSyncTimestamp, maxUpdatedAt);
-
-                // Check all connected players against new/updated bans
-                await CheckAllPlayersAgainstNewBans(newBans);
             }
         }
         catch (Exception ex)
