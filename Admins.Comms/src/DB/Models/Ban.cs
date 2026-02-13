@@ -8,10 +8,10 @@ namespace Admins.Comms.Database.Models;
 public class Sanction : ISanction
 {
     [Key]
-    public ulong Id { get; set; }
+    public long Id { get; set; }
 
     [Column("SteamId64")]
-    public ulong SteamId64 { get; set; }
+    public long SteamId64 { get; set; }
 
     [Column("PlayerName")]
     public string PlayerName { get; set; } = string.Empty;
@@ -26,16 +26,16 @@ public class Sanction : ISanction
     public SanctionKind SanctionKind { get; set; }
 
     [Column("ExpiresAt")]
-    public ulong ExpiresAt { get; set; }
+    public long ExpiresAt { get; set; }
 
     [Column("Length")]
-    public ulong Length { get; set; }
+    public long Length { get; set; }
 
     [Column("Reason")]
     public string Reason { get; set; } = string.Empty;
 
     [Column("AdminSteamId64")]
-    public ulong AdminSteamId64 { get; set; }
+    public long AdminSteamId64 { get; set; }
 
     [Column("AdminName")]
     public string AdminName { get; set; } = string.Empty;
@@ -47,8 +47,8 @@ public class Sanction : ISanction
     public bool GlobalSanction { get; set; }
 
     [Column("CreatedAt")]
-    public ulong CreatedAt { get; set; }
+    public long CreatedAt { get; set; }
 
     [Column("UpdatedAt")]
-    public ulong UpdatedAt { get; set; }
+    public long UpdatedAt { get; set; }
 }

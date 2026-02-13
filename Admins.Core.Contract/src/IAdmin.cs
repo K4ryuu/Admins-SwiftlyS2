@@ -5,7 +5,7 @@ public interface IAdmin
     /// <summary>
     /// The unique identifier of the admin.
     /// </summary>
-    public ulong Id { get; set; }
+    public long Id { get; set; }
     /// <summary>
     /// The SteamID64 of the admin.
     /// </summary>

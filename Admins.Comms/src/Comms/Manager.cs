@@ -30,14 +30,14 @@ public class CommsManager : ICommsManager
     {
         Task.Run(async () =>
         {
-            var timestamp = (ulong)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             sanction.CreatedAt = timestamp;
             sanction.UpdatedAt = timestamp;
 
             if (_configurationManager.GetConfigurationMonitor()!.CurrentValue.UseDatabase == true)
             {
                 var db = Core.Database.GetConnection("admins");
-                sanction.Id = Convert.ToUInt64(await db.InsertAsync((Sanction)sanction));
+                sanction.Id = Convert.ToInt64(await db.InsertAsync((Sanction)sanction));
             }
 
             ServerComms.AllSanctions.TryAdd(sanction.Id, sanction);
@@ -59,7 +59,7 @@ public class CommsManager : ICommsManager
         });
     }
 
-    public ISanction? FindActiveSanction(ulong steamId64, string playerIp, SanctionKind sanctionKind)
+    public ISanction? FindActiveSanction(long steamId64, string playerIp, SanctionKind sanctionKind)
     {
         return _serverComms.FindActiveSanction(steamId64, playerIp, sanctionKind);
     }
@@ -107,7 +107,7 @@ public class CommsManager : ICommsManager
     {
         Task.Run(async () =>
         {
-            sanction.UpdatedAt = (ulong)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            sanction.UpdatedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
             if (_configurationManager.GetConfigurationMonitor()!.CurrentValue.UseDatabase == true)
             {

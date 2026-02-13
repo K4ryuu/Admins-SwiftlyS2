@@ -53,7 +53,7 @@ public class GroupsManager : IGroupsManager
 
     public void SetGroups(List<IGroup> groups)
     {
-        ServerGroups.AllGroups = new ConcurrentDictionary<ulong, Group>(groups.ToDictionary(g => g.Id, g => (Group)g));
+        ServerGroups.AllGroups = new ConcurrentDictionary<long, Group>(groups.ToDictionary(g => g.Id, g => (Group)g));
     }
 
     public async Task<IGroup?> GetGroupByNameAsync(string groupName)

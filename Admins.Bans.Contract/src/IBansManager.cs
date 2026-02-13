@@ -43,7 +43,7 @@ public interface IBansManager
     /// <param name="steamId64">The SteamID64 of the player.</param>
     /// <param name="playerIp">The IP address of the player.</param>
     /// <returns>The active admin ban if found; otherwise, null.</returns>
-    public IBan? FindActiveBan(ulong steamId64, string playerIp);
+    public IBan? FindActiveBan(long steamId64, string playerIp);
 
     /// <summary>
     /// Gets all admin bans from the database.

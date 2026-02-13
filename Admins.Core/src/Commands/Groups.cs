@@ -63,18 +63,15 @@ public partial class ServerCommands
             ? args[4].Split(',', StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToList()
             : new List<string>();
 
-        // Check if group already exists
         var existingGroup = await _groupsManager!.GetGroupByNameAsync(groupName);
 
         if (existingGroup != null)
         {
-            // Group exists, add current server to their servers list if not already present
             if (!existingGroup.Servers.Contains(ServerLoader.ServerGUID))
             {
                 existingGroup.Servers.Add(ServerLoader.ServerGUID);
             }
 
-            // Add additional servers
             foreach (var server in additionalServers)
             {
                 if (!existingGroup.Servers.Contains(server))
@@ -83,7 +80,6 @@ public partial class ServerCommands
                 }
             }
 
-            // Update other properties
             existingGroup.Immunity = immunity;
             existingGroup.Permissions = permissions;
 
@@ -97,7 +93,6 @@ public partial class ServerCommands
         }
         else
         {
-            // Create new group
             var servers = new List<string> { ServerLoader.ServerGUID };
             servers.AddRange(additionalServers);
 
@@ -159,11 +154,9 @@ public partial class ServerCommands
             return;
         }
 
-        // Update group properties
         existingGroup.Immunity = immunity;
         existingGroup.Permissions = permissions;
 
-        // Add additional servers if provided
         foreach (var server in additionalServers)
         {
             if (!existingGroup.Servers.Contains(server))
@@ -202,12 +195,10 @@ public partial class ServerCommands
             return;
         }
 
-        // Remove current server from the group's servers list
         existingGroup.Servers.Remove(ServerLoader.ServerGUID);
 
         if (existingGroup.Servers.Count == 0)
         {
-            // No servers left, delete the group from database
             await _groupsManager.RemoveGroupAsync(existingGroup);
 
             await context.ReplyAsync(localizer[
@@ -218,7 +209,6 @@ public partial class ServerCommands
         }
         else
         {
-            // Update the group with the new servers list
             await _groupsManager.UpdateGroupAsync(existingGroup);
 
             await context.ReplyAsync(localizer[
@@ -243,7 +233,6 @@ public partial class ServerCommands
             return;
         }
 
-        // Filter groups that have access to this server
         var serverGroups = allGroups.Where(g => g.Servers.Contains(ServerLoader.ServerGUID)).ToList();
 
         if (serverGroups.Count == 0)

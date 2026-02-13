@@ -33,15 +33,15 @@ public partial class AdminMenu
                     {
                         var sanction = new Sanction
                         {
-                            SteamId64 = player.SteamID,
+                            SteamId64 = (long)player.SteamID,
                             SanctionKind = sanctionKind,
                             SanctionType = sanctionType,
                             Reason = reason,
                             PlayerName = player.Controller.PlayerName,
                             PlayerIp = player.IPAddress,
-                            ExpiresAt = (ulong)expiresAt,
-                            Length = (ulong)durationTimeSpan.TotalMilliseconds,
-                            AdminSteamId64 = player.SteamID,
+                            ExpiresAt = expiresAt,
+                            Length = (long)durationTimeSpan.TotalMilliseconds,
+                            AdminSteamId64 = (long)player.SteamID,
                             AdminName = adminName,
                             Server = ServerManager!.GetServerGUID(),
                             GlobalSanction = global
@@ -62,15 +62,15 @@ public partial class AdminMenu
 
                         var sanction = new Sanction
                         {
-                            SteamId64 = steamId.GetSteamID64(),
+                            SteamId64 = (long)steamId.GetSteamID64(),
                             SanctionType = sanctionType,
                             SanctionKind = sanctionKind,
                             Reason = reason,
                             PlayerName = "Unknown",
                             PlayerIp = "",
-                            ExpiresAt = (ulong)expiresAt,
-                            Length = (ulong)durationTimeSpan.TotalMilliseconds,
-                            AdminSteamId64 = player.SteamID,
+                            ExpiresAt = expiresAt,
+                            Length = (long)durationTimeSpan.TotalMilliseconds,
+                            AdminSteamId64 = (long)player.SteamID,
                             AdminName = adminName,
                             Server = ServerManager!.GetServerGUID(),
                             GlobalSanction = global
@@ -113,9 +113,9 @@ public partial class AdminMenu
                             Reason = reason,
                             PlayerName = "Unknown",
                             PlayerIp = playerQuery.ToString()!,
-                            ExpiresAt = (ulong)expiresAt,
-                            Length = (ulong)durationTimeSpan.TotalMilliseconds,
-                            AdminSteamId64 = player.SteamID,
+                            ExpiresAt = expiresAt,
+                            Length = (long)durationTimeSpan.TotalMilliseconds,
+                            AdminSteamId64 = (long)player.SteamID,
                             AdminName = adminName,
                             Server = ServerManager!.GetServerGUID(),
                             GlobalSanction = global

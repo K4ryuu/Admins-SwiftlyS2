@@ -5,7 +5,7 @@ public interface IServer
     /// <summary>
     /// The unique identifier of the server.
     /// </summary>
-    public ulong Id { get; set; }
+    public long Id { get; set; }
     /// <summary>
     /// The IP address of the server.
     /// </summary>

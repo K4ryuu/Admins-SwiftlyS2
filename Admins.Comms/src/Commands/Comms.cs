@@ -636,15 +636,15 @@ public partial class ServerCommands
         {
             var sanction = new Sanction
             {
-                SteamId64 = player.SteamID,
+                SteamId64 = (long)player.SteamID,
                 SanctionKind = sanctionKind,
                 SanctionType = sanctionType,
                 Reason = reason,
                 PlayerName = player.Controller.PlayerName,
                 PlayerIp = player.IPAddress,
-                ExpiresAt = (ulong)expiresAt,
-                Length = (ulong)duration.TotalMilliseconds,
-                AdminSteamId64 = context.IsSentByPlayer ? context.Sender!.SteamID : 0,
+                ExpiresAt = expiresAt,
+                Length = (long)duration.TotalMilliseconds,
+                AdminSteamId64 = context.IsSentByPlayer ? (long)context.Sender!.SteamID : 0,
                 AdminName = adminName,
                 Server = ServerManager.GetServerGUID(),
                 GlobalSanction = isGlobal
@@ -717,7 +717,7 @@ public partial class ServerCommands
         foreach (var player in players)
         {
             var sanctions = ServerComms.AllSanctions.Values.Where(s =>
-                s.SanctionType == sanctionType && (s.SteamId64 == player.SteamID || s.PlayerIp == player.IPAddress) && s.SanctionKind == sanctionKind
+                s.SanctionType == sanctionType && (s.SteamId64 == (long)player.SteamID || s.PlayerIp == player.IPAddress) && s.SanctionKind == sanctionKind
             ).ToList();
 
             foreach (var sanction in sanctions)
@@ -744,15 +744,15 @@ public partial class ServerCommands
 
         var sanction = new Sanction
         {
-            SteamId64 = steamId64,
+            SteamId64 = (long)steamId64,
             SanctionType = sanctionType,
             SanctionKind = sanctionKind,
             Reason = reason,
             PlayerName = "Unknown",
             PlayerIp = "",
-            ExpiresAt = (ulong)expiresAt,
-            Length = (ulong)duration.TotalMilliseconds,
-            AdminSteamId64 = context.IsSentByPlayer ? context.Sender!.SteamID : 0,
+            ExpiresAt = expiresAt,
+            Length = (long)duration.TotalMilliseconds,
+            AdminSteamId64 = context.IsSentByPlayer ? (long)context.Sender!.SteamID : 0,
             AdminName = adminName,
             Server = ServerManager.GetServerGUID(),
             GlobalSanction = isGlobal
@@ -803,9 +803,9 @@ public partial class ServerCommands
             Reason = reason,
             PlayerName = "Unknown",
             PlayerIp = ipAddress,
-            ExpiresAt = (ulong)expiresAt,
-            Length = (ulong)duration.TotalMilliseconds,
-            AdminSteamId64 = context.IsSentByPlayer ? context.Sender!.SteamID : 0,
+            ExpiresAt = expiresAt,
+            Length = (long)duration.TotalMilliseconds,
+            AdminSteamId64 = context.IsSentByPlayer ? (long)context.Sender!.SteamID : 0,
             AdminName = adminName,
             Server = ServerManager.GetServerGUID(),
             GlobalSanction = isGlobal

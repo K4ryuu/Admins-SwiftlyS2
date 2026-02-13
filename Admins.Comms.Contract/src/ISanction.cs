@@ -14,19 +14,19 @@ public enum SanctionKind
 
 public interface ISanction
 {
-    ulong Id { get; set; }
-    ulong SteamId64 { get; set; }
+    long Id { get; set; }
+    long SteamId64 { get; set; }
     string PlayerName { get; set; }
     string PlayerIp { get; set; }
     SanctionType SanctionType { get; set; }
     SanctionKind SanctionKind { get; set; }
-    ulong ExpiresAt { get; set; }
-    ulong Length { get; set; }
+    long ExpiresAt { get; set; }
+    long Length { get; set; }
     string Reason { get; set; }
-    ulong AdminSteamId64 { get; set; }
+    long AdminSteamId64 { get; set; }
     string AdminName { get; set; }
     string Server { get; set; }
     bool GlobalSanction { get; set; }
-    ulong CreatedAt { get; set; }
-    ulong UpdatedAt { get; set; }
+    long CreatedAt { get; set; }
+    long UpdatedAt { get; set; }
 }

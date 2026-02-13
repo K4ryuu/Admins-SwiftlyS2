@@ -108,7 +108,6 @@ public partial class AdminsComms : BasePlugin
         _serverComms!.Load();
         _adminMenu!.LoadAdminMenu();
 
-        // Start periodic sanctions sync if enabled
         StartSanctionsSyncTimer();
     }
 

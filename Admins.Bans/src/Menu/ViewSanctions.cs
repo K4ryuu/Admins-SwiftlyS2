@@ -92,7 +92,7 @@ public partial class AdminMenu
     public IMenuAPI BuildBanViewMenu(IPlayer player)
     {
         var menuBuilder = Core.MenusAPI.CreateBuilder();
-        var currentTime = (ulong)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var currentTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
         menuBuilder
             .Design.SetMenuTitle(TranslateString(player, "menu.bans.bans.view"))

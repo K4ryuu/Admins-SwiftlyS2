@@ -8,7 +8,7 @@ namespace Admins.Core.Database.Models;
 public class Server : IServer
 {
     [Key]
-    public ulong Id { get; set; }
+    public long Id { get; set; }
 
     [Column("IP")]
     public string IP { get; set; } = string.Empty;

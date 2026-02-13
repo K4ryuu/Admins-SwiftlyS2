@@ -70,7 +70,6 @@ public partial class ServerCommands
             ? args[6].Split(',', StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToList()
             : new List<string>();
 
-        // Validate server GUIDs
         foreach (var serverGuid in additionalServers)
         {
             if (!Guid.TryParse(serverGuid, out _))
@@ -84,7 +83,6 @@ public partial class ServerCommands
             }
         }
 
-        // Validate group names exist
         foreach (var groupName in groups)
         {
             var group = _groupsManager!.GetGroup(groupName);
@@ -99,18 +97,15 @@ public partial class ServerCommands
             }
         }
 
-        // Check if admin already exists
         var existingAdmin = await _adminsManager!.GetAdminBySteamId64Async(steamId64);
 
         if (existingAdmin != null)
         {
-            // Admin exists, add current server to their servers list if not already present
             if (!existingAdmin.Servers.Contains(ServerLoader.ServerGUID))
             {
                 existingAdmin.Servers.Add(ServerLoader.ServerGUID);
             }
 
-            // Add additional servers
             foreach (var server in additionalServers)
             {
                 if (!existingAdmin.Servers.Contains(server))
@@ -119,7 +114,6 @@ public partial class ServerCommands
                 }
             }
 
-            // Update other properties
             existingAdmin.Username = username;
             existingAdmin.Immunity = immunity;
             existingAdmin.Groups = groups;
@@ -136,7 +130,6 @@ public partial class ServerCommands
         }
         else
         {
-            // Create new admin
             var servers = new List<string> { ServerLoader.ServerGUID };
             servers.AddRange(additionalServers);
 
@@ -218,7 +211,6 @@ public partial class ServerCommands
                     .Select(g => g.Trim())
                     .ToList();
 
-                // Validate group names exist
                 foreach (var groupName in groups)
                 {
                     var group = _groupsManager!.GetGroup(groupName);
@@ -240,7 +232,6 @@ public partial class ServerCommands
                     .Select(s => s.Trim())
                     .ToList();
 
-                // Validate server GUIDs
                 foreach (var serverGuid in servers)
                 {
                     if (!Guid.TryParse(serverGuid, out _))
@@ -300,12 +291,10 @@ public partial class ServerCommands
             return;
         }
 
-        // Remove current server from the admin's servers list
         existingAdmin.Servers.Remove(ServerLoader.ServerGUID);
 
         if (existingAdmin.Servers.Count == 0)
         {
-            // No servers left, delete the admin from database
             _adminsManager.RemoveAdmin(existingAdmin);
 
             await context.ReplyAsync(localizer[
@@ -317,7 +306,6 @@ public partial class ServerCommands
         }
         else
         {
-            // Update the admin with the new servers list
             await _adminsManager.UpdateAdminAsync(existingAdmin);
 
             await context.ReplyAsync(localizer[
@@ -343,7 +331,6 @@ public partial class ServerCommands
             return;
         }
 
-        // Filter admins who have access to this server
         var serverAdmins = allAdmins.Where(a => a.Servers.Contains(ServerLoader.ServerGUID)).ToList();
 
         if (serverAdmins.Count == 0)

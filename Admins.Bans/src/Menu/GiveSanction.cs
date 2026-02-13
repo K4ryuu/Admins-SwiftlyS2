@@ -33,14 +33,14 @@ public partial class AdminMenu
                     {
                         var Ban = new Ban
                         {
-                            SteamId64 = player.SteamID,
+                            SteamId64 = (long)player.SteamID,
                             BanType = banType,
                             Reason = reason,
                             PlayerName = player.Controller.PlayerName,
                             PlayerIp = player.IPAddress,
-                            ExpiresAt = (ulong)expiresAt,
-                            Length = (ulong)durationTimeSpan.TotalMilliseconds,
-                            AdminSteamId64 = player.SteamID,
+                            ExpiresAt = expiresAt,
+                            Length = (long)durationTimeSpan.TotalMilliseconds,
+                            AdminSteamId64 = (long)player.SteamID,
                             AdminName = adminName,
                             Server = ServerManager!.GetServerGUID(),
                             GlobalBan = global
@@ -62,14 +62,14 @@ public partial class AdminMenu
 
                         var ban = new Ban
                         {
-                            SteamId64 = steamId.GetSteamID64(),
+                            SteamId64 = (long)steamId.GetSteamID64(),
                             BanType = banType,
                             Reason = reason,
                             PlayerName = "Unknown",
                             PlayerIp = "",
-                            ExpiresAt = (ulong)expiresAt,
-                            Length = (ulong)durationTimeSpan.TotalMilliseconds,
-                            AdminSteamId64 = player.SteamID,
+                            ExpiresAt = expiresAt,
+                            Length = (long)durationTimeSpan.TotalMilliseconds,
+                            AdminSteamId64 = (long)player.SteamID,
                             AdminName = adminName,
                             Server = ServerManager!.GetServerGUID(),
                             GlobalBan = global
@@ -108,9 +108,9 @@ public partial class AdminMenu
                             Reason = reason,
                             PlayerName = "Unknown",
                             PlayerIp = playerQuery.ToString()!,
-                            ExpiresAt = (ulong)expiresAt,
-                            Length = (ulong)durationTimeSpan.TotalMilliseconds,
-                            AdminSteamId64 = player.SteamID,
+                            ExpiresAt = expiresAt,
+                            Length = (long)durationTimeSpan.TotalMilliseconds,
+                            AdminSteamId64 = (long)player.SteamID,
                             AdminName = adminName,
                             Server = ServerManager!.GetServerGUID(),
                             GlobalBan = global

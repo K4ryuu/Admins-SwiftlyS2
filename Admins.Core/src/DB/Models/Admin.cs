@@ -10,7 +10,7 @@ namespace Admins.Core.Database.Models;
 public class Admin : IAdmin
 {
     [Key]
-    public ulong Id { get; set; }
+    public long Id { get; set; }
 
     [Column("SteamId64")]
     public long SteamId64 { get; set; }

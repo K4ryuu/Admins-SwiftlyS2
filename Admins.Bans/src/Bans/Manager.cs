@@ -31,14 +31,14 @@ public class BansManager : IBansManager
     {
         Task.Run(async () =>
         {
-            var timestamp = (ulong)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             ban.CreatedAt = timestamp;
             ban.UpdatedAt = timestamp;
 
             if (_configurationManager.GetConfigurationMonitor()!.CurrentValue.UseDatabase == true)
             {
                 var db = Core.Database.GetConnection("admins");
-                ban.Id = Convert.ToUInt64(await db.InsertAsync((Ban)ban));
+                ban.Id = Convert.ToInt64(await db.InsertAsync((Ban)ban));
             }
 
             ServerBans.AllBans.TryAdd(ban.Id, ban);
@@ -60,7 +60,7 @@ public class BansManager : IBansManager
         });
     }
 
-    public IBan? FindActiveBan(ulong steamId64, string playerIp)
+    public IBan? FindActiveBan(long steamId64, string playerIp)
     {
         return _serverBans.FindActiveBan(steamId64, playerIp);
     }
@@ -74,7 +74,7 @@ public class BansManager : IBansManager
     {
         Task.Run(async () =>
         {
-            var currentTime = (ulong)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            var currentTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             ban.ExpiresAt = currentTime;
             ban.UpdatedAt = currentTime;
 
@@ -112,7 +112,7 @@ public class BansManager : IBansManager
     {
         Task.Run(async () =>
         {
-            ban.UpdatedAt = (ulong)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            ban.UpdatedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
             if (_configurationManager.GetConfigurationMonitor()!.CurrentValue.UseDatabase == true)
             {

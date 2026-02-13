@@ -94,7 +94,7 @@ public partial class AdminMenu
     public IMenuAPI BuildSanctionViewMenu(IPlayer player)
     {
         var menuBuilder = Core.MenusAPI.CreateBuilder();
-        var currentTime = (ulong)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var currentTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
         menuBuilder
             .Design.SetMenuTitle(TranslateString(player, "menu.comms.sanctions.view"))

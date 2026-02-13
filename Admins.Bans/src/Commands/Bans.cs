@@ -117,7 +117,7 @@ public partial class ServerCommands
             return;
         }
 
-        RemoveBanBySteamID(context, steamId64);
+        RemoveBanBySteamID(context, (long)steamId64);
     }
 
     [Command("unbanip", permission: "admins.commands.unban")]
@@ -229,14 +229,14 @@ public partial class ServerCommands
         {
             var ban = new Ban
             {
-                SteamId64 = player.SteamID,
+                SteamId64 = (long)player.SteamID,
                 BanType = banType,
                 Reason = reason,
                 PlayerName = player.Controller.PlayerName,
                 PlayerIp = player.IPAddress,
-                ExpiresAt = (ulong)expiresAt,
-                Length = (ulong)duration.TotalMilliseconds,
-                AdminSteamId64 = context.IsSentByPlayer ? context.Sender!.SteamID : 0,
+                ExpiresAt = expiresAt,
+                Length = (long)duration.TotalMilliseconds,
+                AdminSteamId64 = context.IsSentByPlayer ? (long)context.Sender!.SteamID : 0,
                 AdminName = adminName,
                 Server = ServerManager.GetServerGUID(),
                 GlobalBan = isGlobal
@@ -284,10 +284,10 @@ public partial class ServerCommands
         });
     }
 
-    private void RemoveBanBySteamID(ICommandContext context, ulong steamId64)
+    private void RemoveBanBySteamID(ICommandContext context, long steamId64)
     {
         var adminName = GetAdminName(context);
-        var currentTime = (ulong)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var currentTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
         var bans = BanManager.GetBans()
             .Where(b => b.SteamId64 == steamId64 &&
@@ -311,7 +311,7 @@ public partial class ServerCommands
     private void RemoveBanByIP(ICommandContext context, string ipAddress)
     {
         var adminName = GetAdminName(context);
-        var currentTime = (ulong)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var currentTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
         var bans = BanManager.GetBans()
             .Where(b => b.PlayerIp == ipAddress &&
@@ -346,14 +346,14 @@ public partial class ServerCommands
 
         var ban = new Ban
         {
-            SteamId64 = steamId64,
+            SteamId64 = (long)steamId64,
             BanType = banType,
             Reason = reason,
             PlayerName = "Unknown",
             PlayerIp = ipAddress ?? "",
-            ExpiresAt = (ulong)expiresAt,
-            Length = (ulong)duration.TotalMilliseconds,
-            AdminSteamId64 = context.IsSentByPlayer ? context.Sender!.SteamID : 0,
+            ExpiresAt = expiresAt,
+            Length = (long)duration.TotalMilliseconds,
+            AdminSteamId64 = context.IsSentByPlayer ? (long)context.Sender!.SteamID : 0,
             AdminName = adminName,
             Server = ServerManager.GetServerGUID(),
             GlobalBan = isGlobal

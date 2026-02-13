@@ -17,7 +17,7 @@ public partial class ServerGroups
 
     private IOptionsMonitor<CoreConfiguration>? _config;
 
-    public static ConcurrentDictionary<ulong, Group> AllGroups { get; set; } = [];
+    public static ConcurrentDictionary<long, Group> AllGroups { get; set; } = [];
 
     public ServerGroups(ServerAdmins admins, ISwiftlyCore core, IOptionsMonitor<CoreConfiguration> config)
     {
@@ -40,7 +40,7 @@ public partial class ServerGroups
             {
                 var db = Core.Database.GetConnection("admins");
                 var groups = await db.GetAllAsync<Group>();
-                AllGroups = new ConcurrentDictionary<ulong, Group>(groups.ToDictionary(g => g.Id, g => g));
+                AllGroups = new ConcurrentDictionary<long, Group>(groups.ToDictionary(g => g.Id, g => g));
             }
 
             _admins.Load();

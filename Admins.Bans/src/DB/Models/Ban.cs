@@ -8,10 +8,10 @@ namespace Admins.Bans.Database.Models;
 public class Ban : IBan
 {
     [Key]
-    public ulong Id { get; set; }
+    public long Id { get; set; }
 
     [Column("SteamId64")]
-    public ulong SteamId64 { get; set; }
+    public long SteamId64 { get; set; }
 
     [Column("PlayerName")]
     public string PlayerName { get; set; } = string.Empty;
@@ -23,16 +23,16 @@ public class Ban : IBan
     public BanType BanType { get; set; }
 
     [Column("ExpiresAt")]
-    public ulong ExpiresAt { get; set; }
+    public long ExpiresAt { get; set; }
 
     [Column("Length")]
-    public ulong Length { get; set; }
+    public long Length { get; set; }
 
     [Column("Reason")]
     public string Reason { get; set; } = string.Empty;
 
     [Column("AdminSteamId64")]
-    public ulong AdminSteamId64 { get; set; }
+    public long AdminSteamId64 { get; set; }
 
     [Column("AdminName")]
     public string AdminName { get; set; } = string.Empty;
@@ -44,8 +44,8 @@ public class Ban : IBan
     public bool GlobalBan { get; set; }
 
     [Column("CreatedAt")]
-    public ulong CreatedAt { get; set; }
+    public long CreatedAt { get; set; }
 
     [Column("UpdatedAt")]
-    public ulong UpdatedAt { get; set; }
+    public long UpdatedAt { get; set; }
 }

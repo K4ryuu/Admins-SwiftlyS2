@@ -5,7 +5,7 @@ public interface IGroup
     /// <summary>
     /// The unique identifier of the group.
     /// </summary>
-    public ulong Id { get; set; }
+    public long Id { get; set; }
     /// <summary>
     /// The name of the group.
     /// </summary>

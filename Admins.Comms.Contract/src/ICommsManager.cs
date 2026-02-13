@@ -44,7 +44,7 @@ public interface ICommsManager
     /// <param name="playerIp">The IP address of the player.</param>
     /// <param name="sanctionKind">The kind of sanction to find.</param>
     /// <returns>The active admin communication sanction if found; otherwise, null.</returns>
-    public ISanction? FindActiveSanction(ulong steamId64, string playerIp, SanctionKind sanctionKind);
+    public ISanction? FindActiveSanction(long steamId64, string playerIp, SanctionKind sanctionKind);
 
     /// <summary>
     /// Gets all admin communication sanctions from the database.

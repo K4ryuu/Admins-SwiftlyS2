@@ -10,7 +10,7 @@ namespace Admins.Core.Database.Models;
 public class Group : IGroup
 {
     [Key]
-    public ulong Id { get; set; }
+    public long Id { get; set; }
 
     [Column("Name")]
     public string Name { get; set; } = string.Empty;

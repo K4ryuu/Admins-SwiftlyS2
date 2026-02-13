@@ -106,7 +106,6 @@ public partial class AdminsBans : BasePlugin
         _serverBans!.Load();
         _adminMenu!.LoadAdminMenu();
 
-        // Start periodic bans sync if enabled
         StartBansSyncTimer();
     }
 

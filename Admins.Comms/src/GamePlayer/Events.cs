@@ -97,13 +97,13 @@ public partial class GamePlayer
 
     public bool IsPlayerMuted(IPlayer player, out ISanction? activeSanction)
     {
-        activeSanction = Comms.FindActiveSanction(player.SteamID, player.IPAddress, SanctionKind.Mute);
+        activeSanction = Comms.FindActiveSanction((long)player.SteamID, player.IPAddress, SanctionKind.Mute);
         return activeSanction != null;
     }
 
     public bool IsPlayerGagged(IPlayer player, out ISanction? activeSanction)
     {
-        activeSanction = Comms.FindActiveSanction(player.SteamID, player.IPAddress, SanctionKind.Gag);
+        activeSanction = Comms.FindActiveSanction((long)player.SteamID, player.IPAddress, SanctionKind.Gag);
         return activeSanction != null;
     }
 

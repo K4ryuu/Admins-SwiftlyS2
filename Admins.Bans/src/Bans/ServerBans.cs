@@ -15,9 +15,9 @@ public class ServerBans
     private ISwiftlyCore Core = null!;
     private IConfigurationManager _configurationManager = null!;
     private IServerManager _serverManager = null!;
-    private ulong _lastSyncTimestamp = 0;
+    private long _lastSyncTimestamp = 0;
 
-    public static ConcurrentDictionary<ulong, IBan> AllBans { get; set; } = [];
+    public static ConcurrentDictionary<long, IBan> AllBans { get; set; } = [];
 
     public ServerBans(ISwiftlyCore core)
     {
@@ -42,10 +42,9 @@ public class ServerBans
             {
                 var db = Core.Database.GetConnection("admins");
                 var bans = await db.GetAllAsync<Ban>();
-                AllBans = new ConcurrentDictionary<ulong, IBan>(bans.ToDictionary(b => b.Id, b => (IBan)b));
+                AllBans = new ConcurrentDictionary<long, IBan>(bans.ToDictionary(b => b.Id, b => (IBan)b));
 
-                // Set last sync timestamp to current time
-                _lastSyncTimestamp = (ulong)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                _lastSyncTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             }
         });
     }
@@ -59,30 +58,26 @@ public class ServerBans
         {
             var db = Core.Database.GetConnection("admins");
 
-            // Query bans updated since last sync
             var newBans = await db.SelectAsync<Ban>(b => b.UpdatedAt > _lastSyncTimestamp);
 
             if (newBans.Any())
             {
                 Core.Logger.LogInformation($"[Bans Sync] Found {newBans.Count()} new/updated bans from database");
 
-                var currentTime = (ulong)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                var currentTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
                 foreach (var ban in newBans)
                 {
-                    // If ban has expired, remove it from local cache
                     if (ban.ExpiresAt != 0 && ban.ExpiresAt <= currentTime)
                     {
                         AllBans.TryRemove(ban.Id, out _);
                     }
                     else
                     {
-                        // Add or update ban in local cache
                         AllBans.AddOrUpdate(ban.Id, (IBan)ban, (key, oldValue) => (IBan)ban);
                     }
                 }
 
-                // Update last sync timestamp to the latest UpdatedAt value
                 var maxUpdatedAt = newBans.Max(b => b.UpdatedAt);
                 _lastSyncTimestamp = Math.Max(_lastSyncTimestamp, maxUpdatedAt);
             }
@@ -93,9 +88,9 @@ public class ServerBans
         }
     }
 
-    public IBan? FindActiveBan(ulong steamId64, string playerIp)
+    public IBan? FindActiveBan(long steamId64, string playerIp)
     {
-        var currentTime = (ulong)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var currentTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         return AllBans.Values.FirstOrDefault(ban =>
             ((ban.SteamId64 == steamId64 && ban.BanType == BanType.SteamID) || (!string.IsNullOrEmpty(playerIp) && ban.PlayerIp == playerIp && ban.BanType == BanType.IP)) &&
             (ban.ExpiresAt == 0 || ban.ExpiresAt > currentTime) &&
@@ -125,7 +120,7 @@ public class ServerBans
 
     public void CheckPlayer(IPlayer player)
     {
-        var ban = FindActiveBan(player.SteamID, player.IPAddress);
+        var ban = FindActiveBan((long)player.SteamID, player.IPAddress);
         if (ban != null)
         {
             var localizer = Core.Translation.GetPlayerLocalizer(player);
