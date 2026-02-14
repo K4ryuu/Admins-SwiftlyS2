@@ -140,9 +140,8 @@ public partial class AdminsComms : BasePlugin
 
         if (_configurationManager != null)
         {
-            _serverComms!.Load();
             _adminMenu!.LoadAdminMenu();
-            StartSanctionsSyncTimer();
+            StartOnlinePlayerSanctionCheckTimer();
         }
         else
         {
@@ -150,7 +149,7 @@ public partial class AdminsComms : BasePlugin
         }
     }
 
-    private void StartSanctionsSyncTimer()
+    private void StartOnlinePlayerSanctionCheckTimer()
     {
         if (_configurationManager?.GetConfigurationMonitor()?.CurrentValue == null)
             return;
@@ -159,19 +158,19 @@ public partial class AdminsComms : BasePlugin
 
         if (intervalSeconds > 0 && _configurationManager.GetConfigurationMonitor()!.CurrentValue.UseDatabase)
         {
-            Core.Logger.LogInformation($"Starting sanctions database sync timer with interval of {intervalSeconds} seconds");
+            Core.Logger.LogInformation($"Starting online player sanction check timer with interval of {intervalSeconds} seconds");
 
             Core.Scheduler.RepeatBySeconds(intervalSeconds, () =>
             {
                 Task.Run(async () =>
                 {
-                    await _serverComms!.SyncSanctionsFromDatabase();
+                    await _serverComms!.RefreshOnlinePlayerSanctionsAsync();
                 });
             });
         }
         else
         {
-            Core.Logger.LogInformation("Sanctions database sync is disabled");
+            Core.Logger.LogInformation("Online player sanction check is disabled (database not configured)");
         }
     }
 }

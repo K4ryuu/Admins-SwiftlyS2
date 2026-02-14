@@ -1,6 +1,7 @@
 using Admins.Comms.Contract;
 using Admins.Comms.Database.Models;
 using Dommel;
+using Microsoft.Extensions.Logging;
 using SwiftlyS2.Shared;
 
 namespace Admins.Comms.Manager;
@@ -40,7 +41,19 @@ public class CommsManager : ICommsManager
                 sanction.Id = Convert.ToInt64(await db.InsertAsync((Sanction)sanction));
             }
 
-            ServerComms.AllSanctions.TryAdd(sanction.Id, sanction);
+            // Add to online cache if the target player is online
+            var players = Core.PlayerManager.GetAllPlayers();
+            foreach (var player in players)
+            {
+                if (player.IsFakeClient || !player.IsValid)
+                    continue;
+
+                if ((long)player.SteamID == sanction.SteamId64 || (!string.IsNullOrEmpty(sanction.PlayerIp) && player.IPAddress == sanction.PlayerIp))
+                {
+                    _serverComms.AddToOnlineCache(player.SteamID, sanction);
+                }
+            }
+
             OnAdminSanctionAdded?.Invoke(sanction);
         });
     }
@@ -55,7 +68,7 @@ public class CommsManager : ICommsManager
                 await db.DeleteAllAsync<Sanction>();
             }
 
-            ServerComms.AllSanctions.Clear();
+            ServerComms.OnlinePlayerSanctions.Clear();
         });
     }
 
@@ -66,7 +79,20 @@ public class CommsManager : ICommsManager
 
     public List<ISanction> GetSanctions()
     {
-        return ServerComms.AllSanctions.Values.ToList();
+        try
+        {
+            if (_configurationManager.GetConfigurationMonitor()!.CurrentValue.UseDatabase == true)
+            {
+                var db = Core.Database.GetConnection("admins");
+                return [.. db.GetAllAsync<Sanction>().GetAwaiter().GetResult().Select(s => (ISanction)s)];
+            }
+        }
+        catch (Exception ex)
+        {
+            Core.Logger.LogError($"[Comms] Error fetching sanctions from database: {ex.Message}");
+        }
+
+        return [];
     }
 
     public void RemoveSanction(ISanction sanction)
@@ -79,7 +105,19 @@ public class CommsManager : ICommsManager
                 await db.DeleteAsync((Sanction)sanction);
             }
 
-            ServerComms.AllSanctions.TryRemove(sanction.Id, out _);
+            // Remove from online cache for all online players who might match
+            var players = Core.PlayerManager.GetAllPlayers();
+            foreach (var player in players)
+            {
+                if (player.IsFakeClient || !player.IsValid)
+                    continue;
+
+                if ((long)player.SteamID == sanction.SteamId64 || (!string.IsNullOrEmpty(sanction.PlayerIp) && player.IPAddress == sanction.PlayerIp))
+                {
+                    _serverComms.RemoveFromOnlineCache(player.SteamID, sanction.Id);
+                }
+            }
+
             OnAdminSanctionRemoved?.Invoke(sanction);
         });
     }
@@ -95,11 +133,7 @@ public class CommsManager : ICommsManager
                 await db.InsertAsync(sanctions.Select(s => (Sanction)s).ToList());
             }
 
-            ServerComms.AllSanctions.Clear();
-            foreach (var sanction in sanctions)
-            {
-                ServerComms.AllSanctions.TryAdd(sanction.Id, sanction);
-            }
+            await _serverComms.RefreshOnlinePlayerSanctionsAsync();
         });
     }
 
@@ -115,7 +149,19 @@ public class CommsManager : ICommsManager
                 await db.UpdateAsync((Sanction)sanction);
             }
 
-            ServerComms.AllSanctions.AddOrUpdate(sanction.Id, sanction, (key, oldValue) => sanction);
+            // Refresh the affected player's cache
+            var players = Core.PlayerManager.GetAllPlayers();
+            foreach (var player in players)
+            {
+                if (player.IsFakeClient || !player.IsValid)
+                    continue;
+
+                if ((long)player.SteamID == sanction.SteamId64 || (!string.IsNullOrEmpty(sanction.PlayerIp) && player.IPAddress == sanction.PlayerIp))
+                {
+                    await _serverComms.LoadPlayerSanctionsAsync(player.SteamID, player.IPAddress);
+                }
+            }
+
             OnAdminSanctionUpdated?.Invoke(sanction);
         });
     }

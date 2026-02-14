@@ -138,9 +138,8 @@ public partial class AdminsBans : BasePlugin
 
         if (_configurationManager != null)
         {
-            _serverBans!.Load();
             _adminMenu!.LoadAdminMenu();
-            StartBansSyncTimer();
+            StartOnlinePlayerBanCheckTimer();
         }
         else
         {
@@ -148,7 +147,7 @@ public partial class AdminsBans : BasePlugin
         }
     }
 
-    private void StartBansSyncTimer()
+    private void StartOnlinePlayerBanCheckTimer()
     {
         if (_configurationManager?.GetConfigurationMonitor()?.CurrentValue == null)
             return;
@@ -157,19 +156,17 @@ public partial class AdminsBans : BasePlugin
 
         if (intervalSeconds > 0 && _configurationManager.GetConfigurationMonitor()!.CurrentValue.UseDatabase)
         {
-            Core.Logger.LogInformation($"Starting database sync timer with interval of {intervalSeconds} seconds");
+            Core.Logger.LogInformation($"Starting online player ban check timer with interval of {intervalSeconds} seconds");
 
+            var gamePlayer = _serviceProvider!.GetRequiredService<GamePlayer>();
             Core.Scheduler.RepeatBySeconds(intervalSeconds, () =>
             {
-                Task.Run(async () =>
-                {
-                    await _serverBans!.SyncBansFromDatabase();
-                });
+                gamePlayer.CheckAllOnlinePlayers();
             });
         }
         else
         {
-            Core.Logger.LogInformation("Database sync is disabled");
+            Core.Logger.LogInformation("Online player ban check is disabled (database not configured)");
         }
     }
 }

@@ -1,7 +1,7 @@
-using System.Collections.Concurrent;
 using Admins.Bans.Contract;
 using Admins.Bans.Database.Models;
 using Dommel;
+using Microsoft.Extensions.Logging;
 using SwiftlyS2.Shared;
 
 namespace Admins.Bans.Manager;
@@ -41,8 +41,19 @@ public class BansManager : IBansManager
                 ban.Id = Convert.ToInt64(await db.InsertAsync((Ban)ban));
             }
 
-            ServerBans.AllBans.TryAdd(ban.Id, ban);
             OnAdminBanAdded?.Invoke(ban);
+
+            var players = Core.PlayerManager.GetAllPlayers();
+            foreach (var player in players)
+            {
+                if (player.IsFakeClient || !player.IsValid)
+                    continue;
+
+                if ((long)player.SteamID == ban.SteamId64 || (!string.IsNullOrEmpty(ban.PlayerIp) && player.IPAddress == ban.PlayerIp))
+                {
+                    _serverBans.CheckPlayer(player);
+                }
+            }
         });
     }
 
@@ -55,8 +66,6 @@ public class BansManager : IBansManager
                 var db = Core.Database.GetConnection("admins");
                 await db.DeleteAllAsync<Ban>();
             }
-
-            ServerBans.AllBans.Clear();
         });
     }
 
@@ -67,7 +76,20 @@ public class BansManager : IBansManager
 
     public List<IBan> GetBans()
     {
-        return ServerBans.AllBans.Values.ToList();
+        try
+        {
+            if (_configurationManager.GetConfigurationMonitor()!.CurrentValue.UseDatabase == true)
+            {
+                var db = Core.Database.GetConnection("admins");
+                return [.. db.GetAllAsync<Ban>().GetAwaiter().GetResult().Select(b => (IBan)b)];
+            }
+        }
+        catch (Exception ex)
+        {
+            Core.Logger.LogError($"[Bans] Error fetching bans from database: {ex.Message}");
+        }
+
+        return [];
     }
 
     public void RemoveBan(IBan ban)
@@ -84,7 +106,6 @@ public class BansManager : IBansManager
                 await db.UpdateAsync((Ban)ban);
             }
 
-            ServerBans.AllBans.TryRemove(ban.Id, out _);
             OnAdminBanRemoved?.Invoke(ban);
         });
     }
@@ -98,12 +119,6 @@ public class BansManager : IBansManager
                 var db = Core.Database.GetConnection("admins");
                 await db.DeleteAllAsync<Ban>();
                 await db.InsertAsync(bans.Select(b => (Ban)b).ToList());
-            }
-
-            ServerBans.AllBans.Clear();
-            foreach (var ban in bans)
-            {
-                ServerBans.AllBans.TryAdd(ban.Id, ban);
             }
         });
     }
@@ -120,7 +135,6 @@ public class BansManager : IBansManager
                 await db.UpdateAsync((Ban)ban);
             }
 
-            ServerBans.AllBans.AddOrUpdate(ban.Id, ban, (key, oldValue) => ban);
             OnAdminBanUpdated?.Invoke(ban);
         });
     }

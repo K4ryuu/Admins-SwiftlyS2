@@ -716,8 +716,10 @@ public partial class ServerCommands
 
         foreach (var player in players)
         {
-            var sanctions = ServerComms.AllSanctions.Values.Where(s =>
-                s.SanctionType == sanctionType && (s.SteamId64 == (long)player.SteamID || s.PlayerIp == player.IPAddress) && s.SanctionKind == sanctionKind
+            var playerSanctions = ServerComms.OnlinePlayerSanctions.TryGetValue(player.SteamID, out var cached)
+                ? cached : [];
+            var sanctions = playerSanctions.Where(s =>
+                s.SanctionType == sanctionType && s.SanctionKind == sanctionKind
             ).ToList();
 
             foreach (var sanction in sanctions)

@@ -5,6 +5,7 @@ using Admins.Core.Contract;
 using Microsoft.Extensions.Options;
 using SwiftlyS2.Shared;
 using SwiftlyS2.Shared.Commands;
+using SwiftlyS2.Shared.Events;
 using SwiftlyS2.Shared.Misc;
 using SwiftlyS2.Shared.Players;
 
@@ -53,6 +54,34 @@ public partial class GamePlayer
         var timeZone = GetConfiguredTimeZone();
         var localTime = TimeZoneInfo.ConvertTime(utcTime, timeZone);
         return localTime.ToString("yyyy-MM-dd HH:mm:ss");
+    }
+
+    [EventListener<EventDelegates.OnClientSteamAuthorize>]
+    public void OnClientSteamAuthorize(IOnClientSteamAuthorizeEvent e)
+    {
+        var player = Core.PlayerManager.GetPlayer(e.PlayerId);
+        if (player == null)
+            return;
+
+        Task.Run(async () =>
+        {
+            await Comms.LoadPlayerSanctionsAsync(player.SteamID, player.IPAddress);
+        });
+    }
+
+    [EventListener<EventDelegates.OnClientDisconnected>]
+    public void OnClientDisconnected(IOnClientDisconnectedEvent e)
+    {
+        var player = Core.PlayerManager.GetPlayer(e.PlayerId);
+        if (player == null)
+            return;
+
+        Comms.UnloadPlayer(player.SteamID);
+
+        if (OriginalVoiceFlags.TryGetValue(player.SteamID, out var originalFlags))
+        {
+            OriginalVoiceFlags.Remove(player.SteamID);
+        }
     }
 
     public void ScheduleCheck()

@@ -51,6 +51,10 @@ public class AdminsManager : IAdminsManager
                 });
             });
         }
+        else
+        {
+            _core.Logger.LogInformation("Admins database sync timer is disabled. Set AdminsDatabaseSyncIntervalSeconds to a value greater than 0 to enable it.");
+        }
     }
 
     public IAdmin? AddAdmin(ulong steamId64, string adminName, List<IGroup> groups, List<string> permissions)
