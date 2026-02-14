@@ -518,7 +518,6 @@ public partial class ServerCommands
                 (float)Random.Shared.NextInt64(50, 230) * (Random.Shared.NextDouble() < 0.5 ? -1 : 1),
                 Random.Shared.NextInt64(100, 300)
             );
-            pawn.VelocityUpdated();
 
             pawn.Teleport(null, null, velocity);
         }
