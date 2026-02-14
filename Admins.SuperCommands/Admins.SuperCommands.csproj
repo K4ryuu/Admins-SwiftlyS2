@@ -36,8 +36,12 @@
     <ItemGroup>
       <PublishFiles Include="$(PublishDir)**\*.*" />
     </ItemGroup>
-    
+
     <ZipDirectory SourceDirectory="$(PublishDir)../" DestinationFile="$(OutputPath)../$(AssemblyName).zip" Overwrite="true" />
+  </Target>
+
+  <Target Name="RemoveRuntimeFolders" AfterTargets="Publish">
+    <RemoveDir Directories="$(PublishDir)runtimes" />
   </Target>
 
 </Project> 
