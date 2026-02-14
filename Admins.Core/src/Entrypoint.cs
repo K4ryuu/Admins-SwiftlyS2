@@ -50,14 +50,14 @@ public partial class AdminsCore : BasePlugin
         var serverGroups = _serviceProvider.GetRequiredService<ServerGroups>();
         var serverManager = _serviceProvider.GetRequiredService<ServerManager>();
         var groupsManager = _serviceProvider.GetRequiredService<GroupsManager>();
-        var adminsManager = _serviceProvider.GetRequiredService<AdminsManager>();
-        var configurationManager = _serviceProvider.GetRequiredService<Config.ConfigurationManager>();
+        var _adminsManager = _serviceProvider.GetRequiredService<AdminsManager>();
         _ = _serviceProvider.GetRequiredService<ServerCommands>();
 
-        serverAdmins.SetAdminsManager(adminsManager);
-        adminsManager.SetServerAdmins(serverAdmins);
+        serverAdmins.SetAdminsManager(_adminsManager);
+        _adminsManager.SetServerAdmins(serverAdmins);
 
         serverGroups.Load();
+        _adminsManager.StartSyncTimer();
     }
 
     public override void Unload()
