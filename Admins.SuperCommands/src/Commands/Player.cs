@@ -668,7 +668,7 @@ public partial class ServerCommands
 
         foreach (var player in players)
         {
-            ChangePlayerTeam(player, targetTeam.Value);
+            player.ChangeTeam(targetTeam.Value);
         }
 
         NotifyTeamChange(players, context.Sender!, targetTeam.Value);
@@ -711,18 +711,6 @@ public partial class ServerCommands
             : Team.T;
 
         player.SwitchTeam(newTeam);
-    }
-
-    private void ChangePlayerTeam(IPlayer player, Team team)
-    {
-        if (team == Team.Spectator)
-        {
-            player.ChangeTeam(team);
-        }
-        else
-        {
-            player.SwitchTeam(team);
-        }
     }
 
     private Team? GetTeamFromName(string teamName)
