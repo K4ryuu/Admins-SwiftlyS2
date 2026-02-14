@@ -11,7 +11,6 @@
     <OutputPath>$(MSBuildThisFileDirectory)build/</OutputPath>
     <PublishDir>$(OutputPath)publish/Admins.Core</PublishDir>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
-    <PublishTrimmed>true</PublishTrimmed>
   </PropertyGroup>
 
   <ItemGroup>
