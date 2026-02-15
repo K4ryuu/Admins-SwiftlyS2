@@ -155,67 +155,93 @@ public partial class ServerCommands
     [Command("ungag", permission: "admins.commands.ungag")]
     public void Command_Ungag(ICommandContext context)
     {
-        if (!ValidateArgsCount(context, 1, "ungag", ["<player>"]))
+        if (!ValidateArgsCount(context, 1, "ungag", ["<player|steamid64>"]))
         {
             return;
         }
 
-        var players = FindTargetPlayers(context, context.Args[0]);
-        if (players == null)
-        {
-            return;
-        }
+        var players = Core.PlayerManager.FindTargettedPlayers(context.Sender!, context.Args[0], TargetSearchMode.IncludeSelf);
 
-        RemoveSanctions(players, context, SanctionKind.Gag, SanctionType.SteamID);
+        if (players != null && players.Any())
+        {
+            RemoveSanctions([.. players], context, SanctionKind.Gag, SanctionType.SteamID);
+        }
+        else if (TryParseSteamID(context, context.Args[0], out var steamId64))
+        {
+            RemoveSanctionBySteamID(context, (long)steamId64, SanctionKind.Gag);
+        }
+        else
+        {
+            var localizer = GetPlayerLocalizer(context);
+            context.Reply(localizer["command.invalid_target", ConfigurationManager.GetCurrentConfiguration()!.Prefix, context.Args[0]]);
+        }
     }
 
     [Command("unmute", permission: "admins.commands.unmute")]
     public void Command_Unmute(ICommandContext context)
     {
-        if (!ValidateArgsCount(context, 1, "unmute", ["<player>"]))
+        if (!ValidateArgsCount(context, 1, "unmute", ["<player|steamid64>"]))
         {
             return;
         }
 
-        var players = FindTargetPlayers(context, context.Args[0]);
-        if (players == null)
-        {
-            return;
-        }
+        var players = Core.PlayerManager.FindTargettedPlayers(context.Sender!, context.Args[0], TargetSearchMode.IncludeSelf);
 
-        RemoveSanctions(players, context, SanctionKind.Mute, SanctionType.SteamID);
-        gamePlayer.ScheduleCheck();
+        if (players != null && players.Any())
+        {
+            RemoveSanctions([.. players], context, SanctionKind.Mute, SanctionType.SteamID);
+            gamePlayer.ScheduleCheck();
+        }
+        else if (TryParseSteamID(context, context.Args[0], out var steamId64))
+        {
+            RemoveSanctionBySteamID(context, (long)steamId64, SanctionKind.Mute);
+        }
+        else
+        {
+            var localizer = GetPlayerLocalizer(context);
+            context.Reply(localizer["command.invalid_target", ConfigurationManager.GetCurrentConfiguration()!.Prefix, context.Args[0]]);
+        }
     }
 
     [Command("unsilence", permission: "admins.commands.unsilence")]
     public void Command_Unsilence(ICommandContext context)
     {
-        if (!ValidateArgsCount(context, 1, "unsilence", ["<player>"]))
+        if (!ValidateArgsCount(context, 1, "unsilence", ["<player|steamid64>"]))
         {
             return;
         }
 
-        var players = FindTargetPlayers(context, context.Args[0]);
-        if (players == null)
+        var players = Core.PlayerManager.FindTargettedPlayers(context.Sender!, context.Args[0], TargetSearchMode.IncludeSelf);
+
+        if (players != null && players.Any())
         {
-            return;
+            var playerList = players.ToList();
+            var gagCount = RemoveSanctionsInternal(playerList, SanctionType.SteamID, SanctionKind.Gag);
+            var muteCount = RemoveSanctionsInternal(playerList, SanctionType.SteamID, SanctionKind.Mute);
+            gamePlayer.ScheduleCheck();
+
+            var localizer = GetPlayerLocalizer(context);
+            var adminName = GetAdminName(context);
+            var message = localizer[
+                "command.unsilence_success",
+                ConfigurationManager.GetCurrentConfiguration()!.Prefix,
+                adminName,
+                gagCount,
+                muteCount,
+                playerList.Count
+            ];
+            context.Reply(message);
         }
-
-        var gagCount = RemoveSanctionsInternal(players, SanctionType.SteamID, SanctionKind.Gag);
-        var muteCount = RemoveSanctionsInternal(players, SanctionType.SteamID, SanctionKind.Mute);
-        gamePlayer.ScheduleCheck();
-
-        var localizer = GetPlayerLocalizer(context);
-        var adminName = GetAdminName(context);
-        var message = localizer[
-            "command.unsilence_success",
-            ConfigurationManager.GetCurrentConfiguration()!.Prefix,
-            adminName,
-            gagCount,
-            muteCount,
-            players.Count
-        ];
-        context.Reply(message);
+        else if (TryParseSteamID(context, context.Args[0], out var steamId64))
+        {
+            RemoveSanctionBySteamID(context, (long)steamId64, SanctionKind.Gag);
+            RemoveSanctionBySteamID(context, (long)steamId64, SanctionKind.Mute);
+        }
+        else
+        {
+            var localizer = GetPlayerLocalizer(context);
+            context.Reply(localizer["command.invalid_target", ConfigurationManager.GetCurrentConfiguration()!.Prefix, context.Args[0]]);
+        }
     }
 
     [Command("gago", permission: "admins.commands.gag")]
@@ -836,6 +862,31 @@ public partial class ServerCommands
             expiryText,
             reason
         ];
+        context.Reply(message);
+    }
+
+    private void RemoveSanctionBySteamID(ICommandContext context, long steamId64, SanctionKind sanctionKind)
+    {
+        var adminName = GetAdminName(context);
+        var currentTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        var sanctions = CommsManager.GetSanctions()
+            .Where(s => s.SteamId64 == steamId64 &&
+                       s.SanctionKind == sanctionKind &&
+                       s.SanctionType == SanctionType.SteamID &&
+                       (s.ExpiresAt == 0 || s.ExpiresAt > currentTime))
+            .ToList();
+
+        foreach (var sanction in sanctions)
+        {
+            CommsManager.RemoveSanction(sanction);
+        }
+
+        var localizer = GetPlayerLocalizer(context);
+        var messageKey = sanctionKind == SanctionKind.Gag ? "command.ungag_success" : "command.unmute_success";
+        var message = sanctions.Count > 0
+            ? localizer[messageKey, ConfigurationManager.GetCurrentConfiguration()!.Prefix, adminName, sanctions.Count, 1]
+            : localizer["command.no_sanctions_found", ConfigurationManager.GetCurrentConfiguration()!.Prefix, steamId64];
         context.Reply(message);
     }
 }
