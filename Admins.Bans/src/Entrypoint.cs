@@ -100,6 +100,19 @@ public partial class AdminsBans : BasePlugin
 
         try
         {
+            if (interfaceManager.HasSharedInterface("Admins.GamePlayer.V1"))
+            {
+                var coreGamePlayer = interfaceManager.GetSharedInterface<Core.Contract.IGamePlayer>("Admins.GamePlayer.V1");
+                coreGamePlayer.SetBansManager(_bansManager);
+            }
+        }
+        catch (Exception ex)
+        {
+            Core.Logger.LogError(ex, "Failed to get GamePlayer from Admins.Core.");
+        }
+
+        try
+        {
             if (interfaceManager.HasSharedInterface("Admins.Server.V1"))
             {
                 _serverManager = interfaceManager.GetSharedInterface<IServerManager>("Admins.Server.V1");

@@ -138,6 +138,19 @@ public partial class AdminsComms : BasePlugin
             Core.Logger.LogError(ex, "Failed to get IAdminMenuAPI from Admins.Menu.");
         }
 
+        try
+        {
+            if (interfaceManager.HasSharedInterface("Admins.GamePlayer.V1"))
+            {
+                var coreGamePlayer = interfaceManager.GetSharedInterface<Core.Contract.IGamePlayer>("Admins.GamePlayer.V1");
+                coreGamePlayer.SetCommsManager(_commsManager);
+            }
+        }
+        catch (Exception ex)
+        {
+            Core.Logger.LogError(ex, "Failed to get GamePlayer from Admins.Core.");
+        }
+
         if (_configurationManager != null)
         {
             _adminMenu!.LoadAdminMenu();

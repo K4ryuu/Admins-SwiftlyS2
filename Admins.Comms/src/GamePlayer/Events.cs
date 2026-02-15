@@ -101,7 +101,7 @@ public partial class GamePlayer
 
                     var expiryText = sanction!.ExpiresAt == 0
                         ? localizer["never"]
-                        : FormatTimestampInTimeZone((long)sanction!.ExpiresAt);
+                        : FormatTimestampInTimeZone(sanction!.ExpiresAt);
 
                     string muteMessage = localizer[
                         "mute.message",
@@ -191,7 +191,7 @@ public partial class GamePlayer
 
             var expiryText = expiresAt == 0
                             ? localizer["never"]
-                            : FormatTimestampInTimeZone((long)expiresAt);
+                            : FormatTimestampInTimeZone(expiresAt);
 
             var message = localizer[
                 "gag.message",
