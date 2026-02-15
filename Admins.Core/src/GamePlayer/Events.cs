@@ -51,14 +51,13 @@ public class GamePlayer : IGamePlayer
 
             if (BansManager != null)
             {
-                var allBans = BansManager.GetBans();
-                totalBans = allBans.Count(b => b.SteamId64 == (long)player.SteamID || b.PlayerIp == player.IPAddress);
+                var allBans = BansManager.FindBans((long)player.SteamID, player.IPAddress);
+                totalBans = allBans.Count;
             }
 
             if (CommsManager != null)
             {
-                var allSanctions = CommsManager.GetSanctions();
-                var playerSanctions = allSanctions.Where(s => s.SteamId64 == (long)player.SteamID || s.PlayerIp == player.IPAddress).ToList();
+                var playerSanctions = CommsManager.FindSanctions((long?)player.SteamID, player.IPAddress);
                 totalGags = playerSanctions.Count(s => s.SanctionKind == SanctionKind.Gag);
                 totalMutes = playerSanctions.Count(s => s.SanctionKind == SanctionKind.Mute);
             }
@@ -72,10 +71,18 @@ public class GamePlayer : IGamePlayer
             if (admins.Count == 0) return;
 
             var playerName = player.Controller.IsValid ? player.Controller.PlayerName : "Unknown";
-            var message = $"{ConfigurationManager.GetCurrentConfiguration()!.Prefix} {playerName} connected - Bans: {totalBans}, Gags: {totalGags}, Mutes: {totalMutes}";
 
             foreach (var admin in admins)
             {
+                var localizer = Core.Translation.GetPlayerLocalizer(admin);
+                var message = localizer[
+                    "notification.player_record",
+                    ConfigurationManager.GetCurrentConfiguration()!.Prefix,
+                    playerName,
+                    totalBans,
+                    totalGags,
+                    totalMutes
+                ];
                 admin.SendChat(message);
             }
         });

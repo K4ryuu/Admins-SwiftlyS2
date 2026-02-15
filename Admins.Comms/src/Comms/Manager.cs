@@ -72,19 +72,50 @@ public class CommsManager : ICommsManager
         });
     }
 
-    public ISanction? FindActiveSanction(long steamId64, string playerIp, SanctionKind sanctionKind)
-    {
-        return _serverComms.FindActiveSanction(steamId64, playerIp, sanctionKind);
-    }
-
-    public List<ISanction> GetSanctions()
+    public List<ISanction> FindSanctions(long? steamId64 = null, string? playerIp = null, SanctionKind? sanctionKind = null, SanctionType? sanctionType = null, RecordStatus status = RecordStatus.All)
     {
         try
         {
             if (_configurationManager.GetConfigurationMonitor()!.CurrentValue.UseDatabase == true)
             {
                 var db = Core.Database.GetConnection("admins");
-                return [.. db.GetAllAsync<Sanction>().GetAwaiter().GetResult().Select(s => (ISanction)s)];
+                var currentTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                var hasPlayerIp = !string.IsNullOrEmpty(playerIp);
+
+                IEnumerable<Sanction> sanctions;
+
+                // Query DB with simple filters only (player filters)
+                if (steamId64 == null && !hasPlayerIp)
+                {
+                    // No player filter - get all sanctions
+                    sanctions = db.GetAllAsync<Sanction>().GetAwaiter().GetResult();
+                }
+                else if (steamId64 != null && !hasPlayerIp)
+                {
+                    // SteamID only
+                    sanctions = db.SelectAsync<Sanction>(s => s.SteamId64 == steamId64).GetAwaiter().GetResult();
+                }
+                else if (steamId64 == null && hasPlayerIp)
+                {
+                    // IP only
+                    sanctions = db.SelectAsync<Sanction>(s => s.PlayerIp == playerIp).GetAwaiter().GetResult();
+                }
+                else
+                {
+                    // Both SteamID and IP (OR logic)
+                    sanctions = db.SelectAsync<Sanction>(s => s.SteamId64 == steamId64 || s.PlayerIp == playerIp).GetAwaiter().GetResult();
+                }
+
+                // Apply sanctionKind, sanctionType, and status filters in-memory
+                var filtered = sanctions.Where(s =>
+                    (sanctionKind == null || s.SanctionKind == sanctionKind) &&
+                    (sanctionType == null || s.SanctionType == sanctionType) &&
+                    (status == RecordStatus.All ||
+                     (status == RecordStatus.Active ? (s.ExpiresAt == 0 || s.ExpiresAt > currentTime) :
+                      (s.ExpiresAt != 0 && s.ExpiresAt <= currentTime)))
+                );
+
+                return [.. filtered.Select(s => (ISanction)s)];
             }
         }
         catch (Exception ex)

@@ -69,19 +69,49 @@ public class BansManager : IBansManager
         });
     }
 
-    public IBan? FindActiveBan(long steamId64, string playerIp)
-    {
-        return _serverBans.FindActiveBan(steamId64, playerIp);
-    }
-
-    public List<IBan> GetBans()
+    public List<IBan> FindBans(long? steamId64 = null, string? playerIp = null, BanType? banType = null, RecordStatus status = RecordStatus.All)
     {
         try
         {
             if (_configurationManager.GetConfigurationMonitor()!.CurrentValue.UseDatabase == true)
             {
                 var db = Core.Database.GetConnection("admins");
-                return [.. db.GetAllAsync<Ban>().GetAwaiter().GetResult().Select(b => (IBan)b)];
+                var currentTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                var hasPlayerIp = !string.IsNullOrEmpty(playerIp);
+
+                IEnumerable<Ban> bans;
+
+                // Query DB with simple filters only (player filters)
+                if (steamId64 == null && !hasPlayerIp)
+                {
+                    // No player filter - get all bans
+                    bans = db.GetAllAsync<Ban>().GetAwaiter().GetResult();
+                }
+                else if (steamId64 != null && !hasPlayerIp)
+                {
+                    // SteamID only
+                    bans = db.SelectAsync<Ban>(b => b.SteamId64 == steamId64).GetAwaiter().GetResult();
+                }
+                else if (steamId64 == null && hasPlayerIp)
+                {
+                    // IP only
+                    bans = db.SelectAsync<Ban>(b => b.PlayerIp == playerIp).GetAwaiter().GetResult();
+                }
+                else
+                {
+                    // Both SteamID and IP (OR logic)
+                    bans = db.SelectAsync<Ban>(b => b.SteamId64 == steamId64 || b.PlayerIp == playerIp).GetAwaiter().GetResult();
+                }
+
+                // Apply banType and status filters in-memory
+                var filtered = bans.Where(b =>
+                    (banType == null || b.BanType == banType) &&
+                    (status == RecordStatus.All ||
+                     (status == RecordStatus.Active ? (b.ExpiresAt == 0 || b.ExpiresAt > currentTime) :
+                      (b.ExpiresAt != 0 && b.ExpiresAt <= currentTime)))
+                );
+
+                return [.. filtered.Select(b => (IBan)b)];
             }
         }
         catch (Exception ex)

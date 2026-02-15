@@ -868,14 +868,7 @@ public partial class ServerCommands
     private void RemoveSanctionBySteamID(ICommandContext context, long steamId64, SanctionKind sanctionKind)
     {
         var adminName = GetAdminName(context);
-        var currentTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-
-        var sanctions = CommsManager.GetSanctions()
-            .Where(s => s.SteamId64 == steamId64 &&
-                       s.SanctionKind == sanctionKind &&
-                       s.SanctionType == SanctionType.SteamID &&
-                       (s.ExpiresAt == 0 || s.ExpiresAt > currentTime))
-            .ToList();
+        var sanctions = CommsManager.FindSanctions(steamId64, null, sanctionKind, SanctionType.SteamID);
 
         foreach (var sanction in sanctions)
         {
